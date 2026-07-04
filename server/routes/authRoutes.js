@@ -1,18 +1,36 @@
 import express from 'express';
-import { login, logout, getCurrentUser, getUsers, createUser, updateUser } from '../controllers/authController.js';
-import { authenticateToken } from '../middleware/authMiddleware.js';
-import { requireAdmin } from '../middleware/roleMiddleware.js';
+import {
+  login,
+  logout,
+  getCurrentUser,
+  getUsers,
+  createUser,
+  updateUser,
+  refreshAccessToken,
+} from '../controllers/authController.js';
+import {
+  authenticateToken,
+  requireAdmin,
+  asyncHandler,
+} from '../middleware/authMiddleware.js';
+import {
+  validateLogin,
+  validateUser,
+} from '../validators/productValidator.js';
 
 const router = express.Router();
 
-// Auth paths
-router.post('/auth/login', login);
-router.post('/auth/logout', logout);
+// Public auth endpoints
+router.post('/auth/login', validateLogin, asyncHandler(login));
+router.post('/auth/refresh', asyncHandler(refreshAccessToken));
+
+// Protected auth endpoints
+router.post('/auth/logout', authenticateToken, logout);
 router.get('/auth/me', authenticateToken, getCurrentUser);
 
-// User paths
-router.get('/users', authenticateToken, requireAdmin, getUsers);
-router.post('/users', authenticateToken, requireAdmin, createUser);
-router.put('/users/:id', authenticateToken, requireAdmin, updateUser);
+// User management endpoints (admin only)
+router.get('/users', authenticateToken, requireAdmin, asyncHandler(getUsers));
+router.post('/users', authenticateToken, requireAdmin, validateUser, asyncHandler(createUser));
+router.put('/users/:id', authenticateToken, requireAdmin, asyncHandler(updateUser));
 
 export default router;
