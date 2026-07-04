@@ -1,0 +1,149 @@
+{
+  "users": [
+    {
+      "id": "usr_admin",
+      "name": "Amina Diallo",
+      "email": "admin@retailer.com",
+      "role": "admin",
+      "passwordHash": "admin123",
+      "active": true,
+      "createdAt": "2026-07-04T22:29:58.560Z"
+    },
+    {
+      "id": "usr_cashier",
+      "name": "Kofi Mensah",
+      "email": "cashier@retailer.com",
+      "role": "cashier",
+      "passwordHash": "cashier123",
+      "active": true,
+      "createdAt": "2026-07-04T22:29:58.563Z"
+    }
+  ],
+  "products": [
+    {
+      "id": "prod_1",
+      "name": "Soap (Anti-bacterial)",
+      "sku": "SKU-SOAP-01",
+      "barcode": "1001",
+      "category": "Hygiene",
+      "costPrice": 0.8,
+      "sellingPrice": 1.5,
+      "quantity": 50,
+      "reorderLevel": 10,
+      "archived": false,
+      "createdAt": "2026-07-04T22:29:58.563Z",
+      "updatedAt": "2026-07-04T22:29:58.563Z"
+    },
+    {
+      "id": "prod_2",
+      "name": "Rice (Jasmine 1kg)",
+      "sku": "SKU-RICE-01",
+      "barcode": "1002",
+      "category": "Food",
+      "costPrice": 2,
+      "sellingPrice": 3.5,
+      "quantity": 20,
+      "reorderLevel": 8,
+      "archived": false,
+      "createdAt": "2026-07-04T22:29:58.563Z",
+      "updatedAt": "2026-07-04T22:29:58.563Z"
+    },
+    {
+      "id": "prod_3",
+      "name": "Cooking Oil 1L",
+      "sku": "SKU-OIL-01",
+      "barcode": "1003",
+      "category": "Food",
+      "costPrice": 4.5,
+      "sellingPrice": 6.8,
+      "quantity": 12,
+      "reorderLevel": 5,
+      "archived": false,
+      "createdAt": "2026-07-04T22:29:58.563Z",
+      "updatedAt": "2026-07-04T22:29:58.563Z"
+    },
+    {
+      "id": "prod_4",
+      "name": "Fresh Milk 1L",
+      "sku": "SKU-MILK-01",
+      "barcode": "1004",
+      "category": "Dairy",
+      "costPrice": 1.2,
+      "sellingPrice": 2.2,
+      "quantity": 5,
+      "reorderLevel": 10,
+      "archived": false,
+      "createdAt": "2026-07-04T22:29:58.563Z",
+      "updatedAt": "2026-07-04T22:29:58.563Z"
+    },
+    {
+      "id": "prod_5",
+      "name": "Bread (Whole Wheat)",
+      "sku": "SKU-BREAD-01",
+      "barcode": "1005",
+      "category": "Bakery",
+      "costPrice": 0.9,
+      "sellingPrice": 1.8,
+      "quantity": 15,
+      "reorderLevel": 5,
+      "archived": false,
+      "createdAt": "2026-07-04T22:29:58.563Z",
+      "updatedAt": "2026-07-04T22:29:58.563Z"
+    }
+  ],
+  "sales": [],
+  "inventoryLogs": [
+    {
+      "id": "log_init_1",
+      "productId": "prod_1",
+      "productName": "Soap (Anti-bacterial)",
+      "type": "IN",
+      "quantity": 50,
+      "reason": "Initial Inventory Stocking",
+      "createdAt": "2026-07-04T22:29:58.563Z"
+    },
+    {
+      "id": "log_init_2",
+      "productId": "prod_2",
+      "productName": "Rice (Jasmine 1kg)",
+      "type": "IN",
+      "quantity": 20,
+      "reason": "Initial Inventory Stocking",
+      "createdAt": "2026-07-04T22:29:58.563Z"
+    },
+    {
+      "id": "log_init_3",
+      "productId": "prod_3",
+      "type": "IN",
+      "productName": "Cooking Oil 1L",
+      "quantity": 12,
+      "reason": "Initial Inventory Stocking",
+      "createdAt": "2026-07-04T22:29:58.563Z"
+    },
+    {
+      "id": "log_init_4",
+      "productId": "prod_4",
+      "productName": "Fresh Milk 1L",
+      "type": "IN",
+      "quantity": 5,
+      "reason": "Initial Inventory Stocking",
+      "createdAt": "2026-07-04T22:29:58.563Z"
+    },
+    {
+      "id": "log_init_5",
+      "productId": "prod_5",
+      "productName": "Bread (Whole Wheat)",
+      "type": "IN",
+      "quantity": 15,
+      "reason": "Initial Inventory Stocking",
+      "createdAt": "2026-07-04T22:29:58.563Z"
+    }
+  ],
+  "settings": {
+    "businessName": "Retailer Commerce",
+    "currency": "GHS",
+    "currencySymbol": "₵",
+    "taxRate": 15,
+    "receiptFooter": "Thank you for shopping with us."
+  }
+}
