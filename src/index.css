@@ -1,0 +1,105 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Sora:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Plus Jakarta Sans", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  /* Custom Warm Charcoal / Carbon Onyx neutrals */
+  --color-slate-50: #faf9f6;
+  --color-slate-100: #f1efea;
+  --color-slate-200: #e3e1d9;
+  --color-slate-300: #cac7bc;
+  --color-slate-400: #a7a499;
+  --color-slate-500: #827f75;
+  --color-slate-600: #646158;
+  --color-slate-700: #4c4a43;
+  --color-slate-800: #33322e;
+  --color-slate-900: #1c1b1a;
+  --color-slate-950: #0f0e0e;
+
+  --color-gray-50: #faf9f6;
+  --color-gray-100: #f1efea;
+  --color-gray-200: #e3e1d9;
+  --color-gray-300: #cac7bc;
+  --color-gray-400: #a7a499;
+  --color-gray-500: #827f75;
+  --color-gray-600: #646158;
+  --color-gray-700: #4c4a43;
+  --color-gray-800: #33322e;
+  --color-gray-900: #1c1b1a;
+  --color-gray-950: #0f0e0e;
+
+  /* Custom Bespoke Cobalt brand colors */
+  --color-indigo-50: #f0f3ff;
+  --color-indigo-100: #e0e7ff;
+  --color-indigo-200: #c7d2fe;
+  --color-indigo-300: #a5b4fc;
+  --color-indigo-400: #818cf8;
+  --color-indigo-500: #6366f1;
+  --color-indigo-600: #2d43be;
+  --color-indigo-700: #2132a0;
+  --color-indigo-800: #1a277d;
+  --color-indigo-900: #131d5b;
+  --color-indigo-950: #090e2d;
+
+  /* Custom Forest Emerald success colors */
+  --color-emerald-50: #ecfdf5;
+  --color-emerald-600: #107b5e;
+  --color-emerald-700: #0c624b;
+
+  /* Custom Bronze Ochre warning colors */
+  --color-amber-50: #fffdf5;
+  --color-amber-600: #ad6200;
+  --color-amber-700: #8c4f00;
+
+  /* Custom Crimson Rose danger colors */
+  --color-rose-50: #fff5f5;
+  --color-rose-600: #c92a2a;
+  --color-rose-700: #b02121;
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+h3 {
+  font-family: "Plus Jakarta Sans", sans-serif;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-slate-50);
+  color: var(--color-slate-900);
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-slate-200);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-slate-300);
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #printable-receipt, #printable-receipt * {
+    visibility: visible;
+  }
+  #printable-receipt {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+}
