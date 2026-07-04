@@ -18,7 +18,7 @@ async function initializeDatabase() {
     await db.insert(users).values({
       id: adminId,
       name: 'Admin User',
-      email: 'admin@retailerpos.local',
+      email: 'admin@retailer.com',
       password_hash: adminPassword,
       role: 'admin',
       active: true,
@@ -27,7 +27,7 @@ async function initializeDatabase() {
     });
 
     console.log('✅ Admin user created');
-    console.log('   Email: admin@retailerpos.local');
+    console.log('   Email: admin@retailer.com');
     console.log('   Password: admin123');
 
     // Create demo cashier user
@@ -37,7 +37,7 @@ async function initializeDatabase() {
     await db.insert(users).values({
       id: cashierId,
       name: 'Cashier User',
-      email: 'cashier@retailerpos.local',
+      email: 'cashier@retailer.com',
       password_hash: cashierPassword,
       role: 'cashier',
       active: true,
@@ -46,7 +46,7 @@ async function initializeDatabase() {
     });
 
     console.log('✅ Cashier user created');
-    console.log('   Email: cashier@retailerpos.local');
+    console.log('   Email: cashier@retailer.com');
     console.log('   Password: cashier123');
 
     // Create demo products
