@@ -1,4 +1,4 @@
-import { Product, Sale, InventoryLog, BusinessSettings, User, SyncQueueItem } from '../../types.js';
+import { Product, Sale, InventoryLog, BusinessSettings, User, SyncQueueItem } from '../../types';
 
 const DB_NAME = 'retailer_db';
 const DB_VERSION = 1;

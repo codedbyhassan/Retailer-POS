@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { localDb } from '../services/indexeddb/db.js';
-import { Product, Sale } from '../types.js';
-import { useCart } from '../hooks/useCart.js';
-import { syncEngine } from '../services/sync/syncEngine.js';
-import { useToast } from '../hooks/useToast.tsx';
+import { localDb } from '../services/indexeddb/db';
+import { Product, Sale } from '../types';
+import { useCart } from '../hooks/useCart';
+import { syncEngine } from '../services/sync/syncEngine';
+import { useToast } from '../hooks/useToast';
 import { 
   Search, ShoppingCart, Percent, User, Printer, Trash2, 
   Plus, Minus, Tag, Landmark, ShieldAlert, CreditCard, 

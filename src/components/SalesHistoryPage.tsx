@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { localDb } from '../services/indexeddb/db.js';
-import { Sale } from '../types.js';
+import { localDb } from '../services/indexeddb/db';
+import { Sale } from '../types';
 import { Search, Printer, Receipt, Eye, Landmark, Calendar, User, ArrowLeft, RefreshCw, X } from 'lucide-react';
 
 interface SalesHistoryPageProps {

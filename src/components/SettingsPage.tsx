@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { localDb } from '../services/indexeddb/db.js';
-import { BusinessSettings, User } from '../types.js';
-import { syncEngine } from '../services/sync/syncEngine.js';
-import { useToast } from '../hooks/useToast.tsx';
+import { localDb } from '../services/indexeddb/db';
+import { BusinessSettings, User } from '../types';
+import { syncEngine } from '../services/sync/syncEngine';
+import { useToast } from '../hooks/useToast';
 import { Settings, Users, Key, Save, UserPlus, Trash, ShieldCheck, X, RefreshCw } from 'lucide-react';
 
 interface SettingsPageProps {

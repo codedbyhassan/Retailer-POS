@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { localDb } from '../services/indexeddb/db.js';
-import { Product } from '../types.js';
-import { syncEngine } from '../services/sync/syncEngine.js';
-import { useToast } from '../hooks/useToast.tsx';
+import { localDb } from '../services/indexeddb/db';
+import { Product } from '../types';
+import { syncEngine } from '../services/sync/syncEngine';
+import { useToast } from '../hooks/useToast';
 import { Plus, Search, Edit2, Archive, Trash2, X, Filter, Package, AlertCircle } from 'lucide-react';
 
 interface ProductsPageProps {

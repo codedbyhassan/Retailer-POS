@@ -1,5 +1,5 @@
-import { localDb } from '../indexeddb/db.js';
-import { apiClient } from '../api.js';
+import { localDb } from '../indexeddb/db';
+import { apiClient } from '../api';
 
 export class SyncEngine {
   private isSyncing = false;

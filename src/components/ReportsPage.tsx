@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { localDb } from '../services/indexeddb/db.js';
-import { Product, Sale } from '../types.js';
+import { localDb } from '../services/indexeddb/db';
+import { Product, Sale } from '../types';
 import { BarChart, DollarSign, Package, TrendingUp, AlertCircle, ShoppingBag, ShieldAlert, Award, FileText, Printer, CheckCircle } from 'lucide-react';
 
 interface ReportsPageProps {

@@ -64,16 +64,47 @@ async function startServer() {
       appType: 'spa',
     });
     app.use(vite.middlewares);
+    
+    // SPA fallback - serve index.html for all non-API routes
+    app.get(/^(?!\/api\/).*$/, (req, res, next) => {
+      // Skip if it's an API route or already handled
+      if (req.path.startsWith('/api/')) {
+        return next();
+      }
+      
+      // For all other requests, use Vite's transform index page
+      res.setHeader('Content-Type', 'text/html');
+      return vite.transformIndexHtml(req.url, `
+        <!doctype html>
+        <html lang="en">
+          <head>
+            <script type="module">import { injectIntoGlobalHook } from "/@react-refresh";
+injectIntoGlobalHook(window);
+window.$RefreshReg$ = () => {};
+window.$RefreshSig$ = () => (type) => type;</script>
+            <script type="module" src="/@vite/client"></script>
+            <meta charset="UTF-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+            <meta name="description" content="Retailer POS is an offline-first retail management system for point-of-sale, inventory control, and reporting." />
+            <title>Retailer POS & Inventory System</title>
+          </head>
+          <body>
+            <div id="root"></div>
+            <script type="module" src="/src/main.tsx"></script>
+          </body>
+        </html>
+      `).then(html => res.end(html)).catch(next);
+    });
   } else {
     const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
-    app.get('*', (req, res) => {
+    app.get(/^(?!\/api\/).*$/, (req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));
     });
   }
 
-  // 404 handler
-  app.use(notFoundHandler);
+  // API 404 handler - only for /api/* routes
+  app.use('/api/', notFoundHandler);
 
   // Global error handler (must be last)
   app.use(errorHandler);

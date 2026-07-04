@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
-import { Product, SaleItem } from '../types.js';
+import { Product, SaleItem } from '../types';
 
 export interface CartItem {
   product: Product;

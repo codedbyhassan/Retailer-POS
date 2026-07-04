@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { localDb } from '../services/indexeddb/db.js';
-import { syncEngine } from '../services/sync/syncEngine.js';
+import { localDb } from '../services/indexeddb/db';
+import { syncEngine } from '../services/sync/syncEngine';
 
 export function useSyncStatus() {
   const [pendingCount, setPendingCount] = useState<number>(0);

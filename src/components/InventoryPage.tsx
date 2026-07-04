@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { localDb } from '../services/indexeddb/db.js';
-import { Product, InventoryLog } from '../types.js';
-import { syncEngine } from '../services/sync/syncEngine.js';
-import { useToast } from '../hooks/useToast.tsx';
+import { localDb } from '../services/indexeddb/db';
+import { Product, InventoryLog } from '../types';
+import { syncEngine } from '../services/sync/syncEngine';
+import { useToast } from '../hooks/useToast';
 import { Plus, ArrowDownUp, ShieldAlert, CheckCircle, Package, History, AlertTriangle, ArrowUpRight, ArrowDownRight, RefreshCw, X } from 'lucide-react';
 
 interface InventoryPageProps {

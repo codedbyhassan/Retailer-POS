@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { User } from '../types.js';
-import { localDb } from '../services/indexeddb/db.js';
-import { apiClient } from '../services/api.js';
+import { User } from '../types';
+import { localDb } from '../services/indexeddb/db';
+import { apiClient } from '../services/api';
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);

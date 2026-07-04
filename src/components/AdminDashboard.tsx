@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { localDb } from '../services/indexeddb/db.js';
-import { Product, Sale, InventoryLog } from '../types.js';
+import { localDb } from '../services/indexeddb/db';
+import { Product, Sale, InventoryLog } from '../types';
 import { TrendingUp, DollarSign, Package, AlertTriangle, ArrowRight, RefreshCw, ShoppingCart, Percent } from 'lucide-react';
 
 interface AdminDashboardProps {
