@@ -1,16 +1,13 @@
-import { Product, Sale, InventoryLog, BusinessSettings, User, SyncQueueItem } from '../../types';
-
 const DB_NAME = 'retailer_db';
 const DB_VERSION = 1;
 
 export class IndexedDBService {
-  private db: IDBDatabase | null = null;
-
   constructor() {
+    this.db = null;
     this.init();
   }
 
-  private init(): Promise<IDBDatabase> {
+  init() {
     if (this.db) return Promise.resolve(this.db);
 
     return new Promise((resolve, reject) => {
@@ -62,32 +59,32 @@ export class IndexedDBService {
     });
   }
 
-  private async getStore(storeName: string, mode: IDBTransactionMode = 'readonly'): Promise<IDBObjectStore> {
+  async getStore(storeName, mode = 'readonly') {
     const db = await this.init();
     const transaction = db.transaction(storeName, mode);
     return transaction.objectStore(storeName);
   }
 
   // Generic methods
-  public async getAll<T>(storeName: string): Promise<T[]> {
+  async getAll(storeName) {
     const store = await this.getStore(storeName);
     return new Promise((resolve, reject) => {
       const request = store.getAll();
-      request.onsuccess = () => resolve(request.result as T[]);
+      request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error);
     });
   }
 
-  public async get<T>(storeName: string, id: string): Promise<T | null> {
+  async get(storeName, id) {
     const store = await this.getStore(storeName);
     return new Promise((resolve, reject) => {
       const request = store.get(id);
-      request.onsuccess = () => resolve((request.result as T) || null);
+      request.onsuccess = () => resolve(request.result || null);
       request.onerror = () => reject(request.error);
     });
   }
 
-  public async put<T>(storeName: string, data: T): Promise<void> {
+  async put(storeName, data) {
     const store = await this.getStore(storeName, 'readwrite');
     return new Promise((resolve, reject) => {
       const request = store.put(data);
@@ -96,7 +93,7 @@ export class IndexedDBService {
     });
   }
 
-  public async delete(storeName: string, id: string): Promise<void> {
+  async delete(storeName, id) {
     const store = await this.getStore(storeName, 'readwrite');
     return new Promise((resolve, reject) => {
       const request = store.delete(id);
@@ -105,7 +102,7 @@ export class IndexedDBService {
     });
   }
 
-  public async clear(storeName: string): Promise<void> {
+  async clear(storeName) {
     const store = await this.getStore(storeName, 'readwrite');
     return new Promise((resolve, reject) => {
       const request = store.clear();
@@ -115,68 +112,68 @@ export class IndexedDBService {
   }
 
   // Specialized Helper Methods
-  public async getProducts(): Promise<Product[]> {
-    const products = await this.getAll<Product>('products');
+  async getProducts() {
+    const products = await this.getAll('products');
     // Return non-archived products
     return products.filter(p => !p.archived);
   }
 
-  public async saveProduct(product: Product): Promise<void> {
-    await this.put<Product>('products', product);
+  async saveProduct(product) {
+    await this.put('products', product);
   }
 
-  public async getSales(): Promise<Sale[]> {
-    return this.getAll<Sale>('sales');
+  async getSales() {
+    return this.getAll('sales');
   }
 
-  public async saveSale(sale: Sale): Promise<void> {
-    await this.put<Sale>('sales', sale);
+  async saveSale(sale) {
+    await this.put('sales', sale);
   }
 
-  public async getInventoryLogs(): Promise<InventoryLog[]> {
-    return this.getAll<InventoryLog>('inventory_logs');
+  async getInventoryLogs() {
+    return this.getAll('inventory_logs');
   }
 
-  public async saveInventoryLog(log: InventoryLog): Promise<void> {
-    await this.put<InventoryLog>('inventory_logs', log);
+  async saveInventoryLog(log) {
+    await this.put('inventory_logs', log);
   }
 
-  public async getSettings(): Promise<BusinessSettings | null> {
-    const list = await this.getAll<any>('settings');
+  async getSettings() {
+    const list = await this.getAll('settings');
     const config = list.find(item => item.id === 'business_config');
-    return config ? (config.data as BusinessSettings) : null;
+    return config ? config.data : null;
   }
 
-  public async saveSettings(settings: BusinessSettings): Promise<void> {
-    await this.put<any>('settings', { id: 'business_config', data: settings });
+  async saveSettings(settings) {
+    await this.put('settings', { id: 'business_config', data: settings });
   }
 
-  public async getUsers(): Promise<User[]> {
-    return this.getAll<User>('users');
+  async getUsers() {
+    return this.getAll('users');
   }
 
-  public async saveUser(user: User): Promise<void> {
-    await this.put<User>('users', user);
+  async saveUser(user) {
+    await this.put('users', user);
   }
 
-  public async getSyncQueue(): Promise<SyncQueueItem[]> {
-    return this.getAll<SyncQueueItem>('sync_queue');
+  async getSyncQueue() {
+    return this.getAll('sync_queue');
   }
 
-  public async addSyncQueueItem(item: Omit<SyncQueueItem, 'status'>): Promise<void> {
-    const queueItem: SyncQueueItem = {
+  async addSyncQueueItem(item) {
+    const queueItem = {
       ...item,
       status: 'pending'
     };
-    await this.put<SyncQueueItem>('sync_queue', queueItem);
+    await this.put('sync_queue', queueItem);
   }
 
-  public async removeSyncQueueItem(id: string): Promise<void> {
+  async removeSyncQueueItem(id) {
     await this.delete('sync_queue', id);
   }
 
   // Pre-seed mock data on first load if empty
-  public async seedIfEmpty(defaultProducts: Product[], defaultSettings: BusinessSettings, defaultUsers: User[]): Promise<void> {
+  async seedIfEmpty(defaultProducts, defaultSettings, defaultUsers) {
     const existingProds = await this.getProducts();
     if (existingProds.length === 0) {
       console.log('[IndexedDB] Pre-seeding default products...');

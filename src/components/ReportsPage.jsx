@@ -1,16 +1,14 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { localDb } from '../services/indexeddb/db';
-import { Product, Sale } from '../types';
-import { BarChart, DollarSign, Package, TrendingUp, AlertCircle, ShoppingBag, ShieldAlert, Award, FileText, Printer, CheckCircle } from 'lucide-react';
+import React, { useState, useEffect, useMemo} from "react";
+import { localDb} from "../services/indexeddb/db";
+import { Product, Sale} from "../types";
+import { BarChart, DollarSign, Package, TrendingUp, AlertCircle, ShoppingBag, ShieldAlert, Award, FileText, Printer, CheckCircle} from "lucide-react";
 
-interface ReportsPageProps {
-  currencySymbol: string;
-}
 
-type ReportTab = 'sales' | 'products' | 'valuation';
 
-export default function ReportsPage({ currencySymbol }: ReportsPageProps) {
-  const [activeTab, setActiveTab] = useState<ReportTab>('sales');
+
+
+export default function ReportsPage({ currencySymbol}: ReportsPageProps) {
+  const [activeTab, setActiveTab] = useState('sales');
   const [products, setProducts] = useState<Product[]>([]);
   const [sales, setSales] = useState<Sale[]>([]);
   const [loading, setLoading] = useState(true);
@@ -24,25 +22,18 @@ export default function ReportsPage({ currencySymbol }: ReportsPageProps) {
       const prods = await localDb.getProducts();
       const s = await localDb.getSales();
       setProducts(prods);
-      setSales(s);
-    } catch (e) {
-      console.error('Error loading reports data:', e);
-    } finally {
-      setLoading(false);
-    }
-  };
+      setSales(s);} catch (e) {
+      console.error('Error loading reports data:', e);} finally {
+      setLoading(false);}};
 
   useEffect(() => {
     loadData();
 
     const handleDbUpdated = () => {
-      loadData();
-    };
+      loadData();};
     window.addEventListener('retailer:db-updated', handleDbUpdated);
     return () => {
-      window.removeEventListener('retailer:db-updated', handleDbUpdated);
-    };
-  }, []);
+      window.removeEventListener('retailer:db-updated', handleDbUpdated);};}, []);
 
   // 1. Daily Sales Computations
   const dailyReport = useMemo(() => {
@@ -58,9 +49,7 @@ export default function ReportsPage({ currencySymbol }: ReportsPageProps) {
         totalItemsSold += item.quantity;
         const prod = products.find(p => p.id === item.productId);
         const cost = prod ? prod.costPrice : item.price * 0.6; // fallback cost
-        totalCost += cost * item.quantity;
-      });
-    });
+        totalCost += cost * item.quantity;});});
 
     const netProfit = grossRevenue - totalCost;
     const profitMargin = grossRevenue > 0 ? (netProfit / grossRevenue) * 100 : 0;
@@ -71,38 +60,30 @@ export default function ReportsPage({ currencySymbol }: ReportsPageProps) {
       totalCost,
       netProfit,
       profitMargin,
-      totalItemsSold
-    };
-  }, [sales, products, selectedDate]);
+      totalItemsSold};}, [sales, products, selectedDate]);
 
   // 2. Product Sales Reports (Best Sellers & Slow Movers)
   const productReports = useMemo(() => {
     // Map of product ID -> quantity sold
-    const salesMap: Record<string, { quantity: number; revenue: number; name: string; sku: string }> = {};
+    const salesMap = {};
     
     // Initialize map
     products.forEach(p => {
-      salesMap[p.id] = { quantity: 0, revenue: 0, name: p.name, sku: p.sku };
-    });
+      salesMap[p.id] = { quantity, revenue, name: p.name, sku: p.sku};});
 
     sales.forEach(sale => {
       sale.items.forEach(item => {
         if (salesMap[item.productId]) {
           salesMap[item.productId].quantity += item.quantity;
-          salesMap[item.productId].revenue += item.subtotal;
-        } else {
+          salesMap[item.productId].revenue += item.subtotal;} else {
           salesMap[item.productId] = {
             quantity: item.quantity,
             revenue: item.subtotal,
             name: item.productName,
-            sku: 'N/A'
-          };
-        }
-      });
-    });
+            sku: 'N/A'};}});});
 
     const sortedProducts = Object.entries(salesMap)
-      .map(([id, stats]) => ({ id, ...stats }))
+      .map(([id, stats]) => ({ id, ...stats}))
       .sort((a, b) => b.quantity - a.quantity);
 
     const bestSellers = sortedProducts.filter(p => p.quantity > 0).slice(0, 5);
@@ -110,9 +91,7 @@ export default function ReportsPage({ currencySymbol }: ReportsPageProps) {
 
     return {
       bestSellers,
-      slowMoers
-    };
-  }, [sales, products]);
+      slowMoers};}, [sales, products]);
 
   // 3. Inventory Valuation report
   const valuationReport = useMemo(() => {
@@ -123,8 +102,7 @@ export default function ReportsPage({ currencySymbol }: ReportsPageProps) {
     products.filter(p => !p.archived).forEach(p => {
       totalStockPieces += p.quantity;
       assetValuationCost += p.quantity * p.costPrice;
-      assetValuationRetail += p.quantity * p.sellingPrice;
-    });
+      assetValuationRetail += p.quantity * p.sellingPrice;});
 
     const potentialProfit = assetValuationRetail - assetValuationCost;
     const marginPercent = assetValuationRetail > 0 ? (potentialProfit / assetValuationRetail) * 100 : 0;
@@ -134,27 +112,22 @@ export default function ReportsPage({ currencySymbol }: ReportsPageProps) {
       assetValuationCost,
       assetValuationRetail,
       potentialProfit,
-      marginPercent
-    };
-  }, [products]);
+      marginPercent};}, [products]);
 
   const handlePrint = () => {
-    window.print();
-  };
+    window.print();};
 
   if (loading) {
     return (
       <div className="bg-white p-12 text-center rounded-xl border border-slate-200">
         <p className="text-xs font-semibold text-slate-500">Compiling financial indicators...</p>
-      </div>
-    );
-  }
+      </div>);}
 
   return (
     <div className="space-y-6">
       
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
+        
           <h2 className="text-lg font-bold text-slate-900 font-display">Business Intelligence & Reports</h2>
           <p className="text-xs text-slate-500">Track cost of goods sold, profit margins, asset valuations and retail analytics</p>
         </div>
@@ -173,8 +146,7 @@ export default function ReportsPage({ currencySymbol }: ReportsPageProps) {
           className={`py-2.5 px-4 text-xs font-bold font-display border-b-2 transition-colors cursor-pointer ${
             activeTab === 'sales'
               ? 'border-indigo-600 text-indigo-750'
-              : 'border-transparent text-slate-500 hover:text-slate-800'
-          }`}
+              : 'border-transparent text-slate-500 hover:text-slate-800'}`}
         >
           Daily Revenue & Margin
         </button>
@@ -183,8 +155,7 @@ export default function ReportsPage({ currencySymbol }: ReportsPageProps) {
           className={`py-2.5 px-4 text-xs font-bold font-display border-b-2 transition-colors cursor-pointer ${
             activeTab === 'products'
               ? 'border-indigo-600 text-indigo-750'
-              : 'border-transparent text-slate-500 hover:text-slate-800'
-          }`}
+              : 'border-transparent text-slate-500 hover:text-slate-800'}`}
         >
           Best Sellers & Movers
         </button>
@@ -193,8 +164,7 @@ export default function ReportsPage({ currencySymbol }: ReportsPageProps) {
           className={`py-2.5 px-4 text-xs font-bold font-display border-b-2 transition-colors cursor-pointer ${
             activeTab === 'valuation'
               ? 'border-indigo-600 text-indigo-750'
-              : 'border-transparent text-slate-500 hover:text-slate-800'
-          }`}
+              : 'border-transparent text-slate-500 hover:text-slate-800'}`}
         >
           Inventory Asset Valuation
         </button>
@@ -263,12 +233,11 @@ export default function ReportsPage({ currencySymbol }: ReportsPageProps) {
               {dailyReport.salesCount === 0 ? (
                 <div className="p-12 text-center text-slate-400 text-xs">
                   <ShoppingBag className="w-8 h-8 mx-auto stroke-1 text-slate-300 mb-2" />
-                  <p>No transactions registered on this date.</p>
-                </div>
-              ) : (
+                  No transactions registered on this date.</p>
+                </div>) : (
                 <div className="overflow-x-auto">
                   <table className="w-full border-collapse text-left text-xs">
-                    <thead>
+                    
                       <tr className="bg-slate-50 border-b border-slate-150 text-slate-500 text-[10px] font-bold uppercase">
                         <th className="py-2.5 px-5">Invoice</th>
                         <th className="py-2.5 px-5">Time</th>
@@ -293,17 +262,13 @@ export default function ReportsPage({ currencySymbol }: ReportsPageProps) {
                             <td className="py-2.5 px-5 text-right font-mono font-bold text-slate-950">
                               {currencySymbol}{s.total.toFixed(2)}
                             </td>
-                          </tr>
-                        );
-                      })}
+                          </tr>);})}
                     </tbody>
                   </table>
-                </div>
-              )}
+                </div>)}
             </div>
 
-          </div>
-        )}
+          </div>)}
 
         {/* TAB 2: PRODUCT SALES ANALYSIS */}
         {activeTab === 'products' && (
@@ -312,7 +277,7 @@ export default function ReportsPage({ currencySymbol }: ReportsPageProps) {
             {/* Best Sellers */}
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-full text-xs">
               <div className="p-4 border-b border-slate-150 bg-emerald-50/20 flex justify-between items-center">
-                <div>
+                
                   <h3 className="font-bold text-slate-900 font-display text-xs flex items-center gap-1.5">
                     <Award className="w-3.5 h-3.5 text-emerald-600" />
                     Top Best Sellers
@@ -327,9 +292,8 @@ export default function ReportsPage({ currencySymbol }: ReportsPageProps) {
               {productReports.bestSellers.length === 0 ? (
                 <div className="p-12 text-center text-slate-400 text-xs flex-1 flex flex-col justify-center">
                   <Package className="w-8 h-8 mx-auto stroke-1 mb-2 text-slate-300" />
-                  <p>Complete sales at checkout to generate best seller charts.</p>
-                </div>
-              ) : (
+                  Complete sales at checkout to generate best seller charts.</p>
+                </div>) : (
                 <div className="divide-y divide-slate-100 flex-1">
                   {productReports.bestSellers.map((item, index) => (
                     <div key={item.id} className="p-3.5 flex items-center justify-between">
@@ -350,16 +314,14 @@ export default function ReportsPage({ currencySymbol }: ReportsPageProps) {
                           {currencySymbol}{item.revenue.toFixed(2)} Revenue
                         </p>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+                    </div>))}
+                </div>)}
             </div>
 
             {/* Slow Movers / Cold Inventory */}
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-full text-xs">
               <div className="p-4 border-b border-slate-150 bg-rose-50/20 flex justify-between items-center">
-                <div>
+                
                   <h3 className="font-bold text-slate-900 font-display text-xs flex items-center gap-1.5">
                     <ShieldAlert className="w-3.5 h-3.5 text-rose-600" />
                     Slow Moving Products
@@ -374,27 +336,23 @@ export default function ReportsPage({ currencySymbol }: ReportsPageProps) {
               {productReports.slowMoers.length === 0 ? (
                 <div className="p-12 text-center text-slate-400 text-xs flex-1 flex flex-col justify-center">
                   <CheckCircle className="w-8 h-8 mx-auto stroke-1 mb-2 text-emerald-350" />
-                  <p>All catalog products are active and selling!</p>
-                </div>
-              ) : (
+                  All catalog products are active and selling!</p>
+                </div>) : (
                 <div className="divide-y divide-slate-100 flex-1">
                   {productReports.slowMoers.map((item) => (
                     <div key={item.id} className="p-3.5 flex items-center justify-between">
-                      <div>
+                      
                         <p className="font-bold text-slate-900 leading-snug truncate max-w-[200px]">{item.name}</p>
                         <p className="text-[10px] text-slate-400 font-mono">SKU: {item.sku}</p>
                       </div>
                       <span className="text-[10px] font-semibold text-rose-600 font-mono bg-rose-50 px-2 py-0.5 rounded">
                         0 Sold
                       </span>
-                    </div>
-                  ))}
-                </div>
-              )}
+                    </div>))}
+                </div>)}
             </div>
 
-          </div>
-        )}
+          </div>)}
 
         {/* TAB 3: INVENTORY VALUATION */}
         {activeTab === 'valuation' && (
@@ -443,7 +401,7 @@ export default function ReportsPage({ currencySymbol }: ReportsPageProps) {
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse text-left text-xs">
-                  <thead>
+                  
                     <tr className="bg-slate-50 border-b border-slate-150 text-slate-500 text-[10px] font-bold uppercase">
                       <th className="py-2.5 px-5">Product</th>
                       <th className="py-2.5 px-5 text-center">Qty on Shelf</th>
@@ -462,18 +420,14 @@ export default function ReportsPage({ currencySymbol }: ReportsPageProps) {
                         <td className="py-2.5 px-5 text-right font-mono text-slate-600">{currencySymbol}{p.sellingPrice.toFixed(2)}</td>
                         <td className="py-2.5 px-5 text-right font-mono text-slate-900 font-medium">{currencySymbol}{(p.quantity * p.costPrice).toFixed(2)}</td>
                         <td className="py-2.5 px-5 text-right font-mono font-bold text-indigo-700">{currencySymbol}{(p.quantity * p.sellingPrice).toFixed(2)}</td>
-                      </tr>
-                    ))}
+                      </tr>))}
                   </tbody>
                 </table>
               </div>
             </div>
 
-          </div>
-        )}
+          </div>)}
 
       </div>
 
-    </div>
-  );
-}
+    </div>);}

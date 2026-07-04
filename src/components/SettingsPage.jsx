@@ -1,18 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { localDb } from '../services/indexeddb/db';
-import { BusinessSettings, User } from '../types';
-import { syncEngine } from '../services/sync/syncEngine';
-import { useToast } from '../hooks/useToast';
-import { Settings, Users, Key, Save, UserPlus, Trash, ShieldCheck, X, RefreshCw } from 'lucide-react';
-
-interface SettingsPageProps {
-  adminUser: { id: string; name: string; role: string };
+import React, { useState, useEffect} from "react";
+import { localDb} from "../services/indexeddb/db";
+import { BusinessSettings, User} from "../types";
+import { syncEngine} from "../services/sync/syncEngine";
+import { useToast} from "../hooks/useToast";
+import { Settings, Users, Key, Save, UserPlus, Trash, ShieldCheck, X, RefreshCw} from "lucide-react";;
   settings: BusinessSettings;
-  onUpdateSettings: (newSettings: BusinessSettings) => void;
-}
+  onUpdateSettings: (newSettings) => void;}
 
-export default function SettingsPage({ adminUser, settings, onUpdateSettings }: SettingsPageProps) {
-  const { showToast } = useToast();
+export default function SettingsPage({ adminUser, settings, onUpdateSettings}: SettingsPageProps) {
+  const { showToast} = useToast();
   // Business Settings states
   const [businessName, setBusinessName] = useState(settings.businessName);
   const [currency, setCurrency] = useState(settings.currency);
@@ -39,51 +35,40 @@ export default function SettingsPage({ adminUser, settings, onUpdateSettings }: 
       if (navigator.onLine && token) {
         // Fetch fresh cashier accounts from server
         const res = await fetch('/api/users', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
+          headers: { 'Authorization': `Bearer ${token}`}});
         if (res.ok) {
           const data = await res.json();
           setUsers(data);
           // Cache locally in IndexedDB
           for (const u of data) {
-            await localDb.saveUser(u);
-          }
+            await localDb.saveUser(u);}
           setUsersLoading(false);
-          return;
-        }
-      }
+          return;}}
 
       // Fallback: load from local IndexedDB
       const list = await localDb.getUsers();
-      setUsers(list);
-    } catch (e) {
+      setUsers(list);} catch (e) {
       console.error('Error fetching cashier users:', e);
       // Fallback
       const list = await localDb.getUsers();
-      setUsers(list);
-    } finally {
-      setUsersLoading(false);
-    }
-  };
+      setUsers(list);} finally {
+      setUsersLoading(false);}};
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    fetchUsers();}, []);
 
-  const handleSaveSettings = async (e: React.FormEvent) => {
+  const handleSaveSettings = async (e) => {
     e.preventDefault();
     if (!businessName.trim() || !currency.trim() || !currencySymbol.trim()) {
       showToast('Mandatory business settings are missing.', 'warning');
-      return;
-    }
+      return;}
 
-    const updated: BusinessSettings = {
+    const updated = {
       businessName: businessName.trim(),
       currency: currency.trim(),
       currencySymbol: currencySymbol.trim(),
       taxRate: Number(taxRate),
-      receiptFooter: receiptFooter.trim()
-    };
+      receiptFooter: receiptFooter.trim()};
 
     try {
       // 1. Save locally to IndexedDB settings store
@@ -99,28 +84,20 @@ export default function SettingsPage({ adminUser, settings, onUpdateSettings }: 
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify(updated)
-        });
+            'Authorization': `Bearer ${token}`},
+          body: JSON.stringify(updated)});
         if (response.ok) {
-          console.log('[Settings] Cloud business settings backed up successfully.');
-        }
-      }
+          console.log('[Settings] Cloud business settings backed up successfully.');}}
 
-      showToast('Business configurations saved successfully!', 'success');
-    } catch (err) {
+      showToast('Business configurations saved successfully!', 'success');} catch (err) {
       console.error('Failed to save settings:', err);
-      showToast('An error occurred while saving configurations.', 'error');
-    }
-  };
+      showToast('An error occurred while saving configurations.', 'error');}};
 
-  const handleCreateCashier = async (e: React.FormEvent) => {
+  const handleCreateCashier = async (e) => {
     e.preventDefault();
     if (!cashierName.trim() || !cashierEmail.trim() || !cashierPassword.trim()) {
       showToast('Please fill in all cashier details.', 'warning');
-      return;
-    }
+      return;}
 
     setIsSavingUser(true);
     try {
@@ -132,16 +109,13 @@ export default function SettingsPage({ adminUser, settings, onUpdateSettings }: 
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
+            'Authorization': `Bearer ${token}`},
           body: JSON.stringify({
             name: cashierName.trim(),
             email: cashierEmail.trim().toLowerCase(),
             password: cashierPassword.trim(),
             role: 'cashier',
-            active: true
-          })
-        });
+            active: true})});
 
         const data = await res.json();
         if (res.ok) {
@@ -151,21 +125,17 @@ export default function SettingsPage({ adminUser, settings, onUpdateSettings }: 
           setCashierEmail('');
           setCashierPassword('');
           fetchUsers();
-          showToast('Cashier account created successfully!', 'success');
-        } else {
-          showToast(data.error || 'Server failed to create cashier account.', 'error');
-        }
-      } else {
+          showToast('Cashier account created successfully!', 'success');} else {
+          showToast(data.error || 'Server failed to create cashier account.', 'error');}} else {
         // Offline: Cache locally in IndexedDB and alert
         const offlineId = `usr_cashier_${Date.now()}`;
-        const newUser: User = {
-          id: offlineId,
+        const newUser = {
+          id,
           name: cashierName.trim(),
           email: cashierEmail.trim().toLowerCase(),
           role: 'cashier',
-          active: true,
-          createdAt: new Date().toISOString()
-        };
+          active,
+          createdAt: new Date().toISOString()};
 
         await localDb.saveUser(newUser);
         
@@ -176,57 +146,44 @@ export default function SettingsPage({ adminUser, settings, onUpdateSettings }: 
         setCashierEmail('');
         setCashierPassword('');
         fetchUsers();
-        showToast('Offline cache complete. Official credentials will register on the cloud when connection re-establishes.', 'warning');
-      }
-    } catch (err) {
+        showToast('Offline cache complete. Official credentials will register on the cloud when connection re-establishes.', 'warning');}} catch (err) {
       console.error('Failed to create cashier:', err);
-      showToast('An error occurred during account registration.', 'error');
-    } finally {
-      setIsSavingUser(false);
-    }
-  };
+      showToast('An error occurred during account registration.', 'error');} finally {
+      setIsSavingUser(false);}};
 
-  const handleToggleUserActive = async (user: any) => {
+  const handleToggleUserActive = async (user) => {
     const action = user.active ? 'deactivate' : 'activate';
     if (!confirm(`Are you sure you want to ${action} ${user.name}'s cashier terminal access?`)) {
-      return;
-    }
+      return;}
 
     try {
       const token = localStorage.getItem('retailer_auth_token');
-      const updatedUser = { ...user, active: !user.active };
+      const updatedUser = { ...user, active: !user.active};
 
       if (navigator.onLine && token) {
         const res = await fetch(`/api/users/${user.id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({ active: !user.active })
-        });
+            'Authorization': `Bearer ${token}`},
+          body: JSON.stringify({ active: !user.active})});
 
         if (res.ok) {
           const data = await res.json();
           await localDb.saveUser(data);
           fetchUsers();
-          return;
-        }
-      }
+          return;}}
 
       // Offline update local cache directly
       await localDb.saveUser(updatedUser);
-      fetchUsers();
-    } catch (e) {
-      console.error('Toggle status failed:', e);
-    }
-  };
+      fetchUsers();} catch (e) {
+      console.error('Toggle status failed:', e);}};
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       
       <div className="lg:col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-5">
-        <div>
+        
           <h2 className="text-base font-bold text-slate-900 font-display flex items-center gap-2">
             <Settings className="w-4 h-4 text-indigo-650" />
             Business Configurations
@@ -317,7 +274,7 @@ export default function SettingsPage({ adminUser, settings, onUpdateSettings }: 
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 flex flex-col h-full">
           
           <div className="flex justify-between items-start mb-4">
-            <div>
+            
               <h2 className="text-base font-bold text-slate-900 font-display flex items-center gap-2">
                 <Users className="w-4 h-4 text-indigo-650" />
                 Store Cashiers
@@ -336,14 +293,12 @@ export default function SettingsPage({ adminUser, settings, onUpdateSettings }: 
 
           {usersLoading ? (
             <div className="py-12 text-center text-xs text-slate-400">
-              <p>Retrieving user profiles...</p>
-            </div>
-          ) : users.length === 0 ? (
+              Retrieving user profiles...</p>
+            </div>) : users.length === 0 ? (
             <div className="py-12 text-center text-xs text-slate-400 border border-dashed border-slate-200 rounded-lg flex-1 flex flex-col justify-center">
               <Users className="w-8 h-8 mx-auto stroke-1 text-slate-300 mb-2" />
-              <p>No cashiers cached on this outlet.</p>
-            </div>
-          ) : (
+              No cashiers cached on this outlet.</p>
+            </div>) : (
             <div className="divide-y divide-slate-100 overflow-y-auto flex-1 max-h-[400px]">
               {users.map((user) => (
                 <div key={user.id} className="py-3 flex items-center justify-between text-xs">
@@ -361,27 +316,22 @@ export default function SettingsPage({ adminUser, settings, onUpdateSettings }: 
                       className={`px-2 py-1 rounded font-bold text-[10px] transition-colors cursor-pointer ${
                         user.active
                           ? 'bg-emerald-50 text-emerald-700 hover:bg-rose-50 hover:text-rose-700'
-                          : 'bg-slate-100 text-slate-400 hover:bg-emerald-50 hover:text-emerald-700'
-                      }`}
+                          : 'bg-slate-100 text-slate-400 hover:bg-emerald-50 hover:text-emerald-700'}`}
                     >
                       {user.active ? 'Active' : 'Disabled'}
                     </button>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
+                </div>))}
+            </div>)}
 
-        </div>
-      ) : (
+        </div>) : (
         <div className="bg-slate-50 rounded-xl border border-slate-200 p-6 text-center text-slate-500">
           <Key className="w-6 h-6 mx-auto stroke-1 text-slate-400 mb-2" />
           <h3 className="font-bold text-slate-900 text-sm">Restricted Access</h3>
           <p className="text-xs max-w-xs mx-auto mt-1 leading-relaxed">
             Only store administrators possess privileges to inspect cashier terminal accounts and generate staff credentials.
           </p>
-        </div>
-      )}
+        </div>)}
 
       {/* CREATE CASHIER OVERLAY MODAL */}
       {showModal && (
@@ -456,9 +406,6 @@ export default function SettingsPage({ adminUser, settings, onUpdateSettings }: 
             </form>
 
           </div>
-        </div>
-      )}
+        </div>)}
 
-    </div>
-  );
-}
+    </div>);}

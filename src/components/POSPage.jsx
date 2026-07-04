@@ -1,26 +1,21 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { localDb } from '../services/indexeddb/db';
-import { Product, Sale } from '../types';
-import { useCart } from '../hooks/useCart';
-import { syncEngine } from '../services/sync/syncEngine';
-import { useToast } from '../hooks/useToast';
+import React, { useState, useEffect, useRef, useMemo} from "react";
+import { localDb} from "../services/indexeddb/db";
+import { Product, Sale} from "../types";
+import { useCart} from "../hooks/useCart";
+import { syncEngine} from "../services/sync/syncEngine";
+import { useToast} from "../hooks/useToast";
 import { 
   Search, ShoppingCart, Percent, User, Printer, Trash2, 
   Plus, Minus, Tag, Landmark, ShieldAlert, CreditCard, 
   Menu, Edit2, Sparkles, Coffee, Cake, Apple, Layers, 
-  Utensils, X, Receipt, CheckCircle, Flame
-} from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
-
-interface POSPageProps {
-  cashier: { id: string; name: string };
+  Utensils, X, Receipt, CheckCircle, Flame} from "lucide-react";
+import { motion, AnimatePresence} from "motion/react";;
   currencySymbol: string;
   taxRate: number;
-  receiptFooter: string;
-}
+  receiptFooter: string;}
 
 // Map categories to modern, friendly Lucide icons
-const getCategoryIcon = (categoryName: string) => {
+const getCategoryIcon = (categoryName) => {
   const name = categoryName.toLowerCase();
   if (name === 'all') return <Layers className="w-5 h-5" />;
   if (name.includes('food') || name.includes('dish') || name.includes('meal')) return <Utensils className="w-5 h-5" />;
@@ -28,25 +23,22 @@ const getCategoryIcon = (categoryName: string) => {
   if (name.includes('bakery') || name.includes('bread') || name.includes('dessert') || name.includes('sweet')) return <Cake className="w-5 h-5" />;
   if (name.includes('hygiene') || name.includes('soap') || name.includes('clean') || name.includes('cosmetic')) return <Sparkles className="w-5 h-5" />;
   if (name.includes('dairy') || name.includes('milk') || name.includes('cheese')) return <Apple className="w-5 h-5" />;
-  return <Layers className="w-5 h-5" />;
-};
+  return <Layers className="w-5 h-5" />;};
 
 // Return CSS classes for premium product placeholders
-const getProductColor = (name: string) => {
+const getProductColor = (name) => {
   const colors = [
     'from-emerald-500/20 to-teal-500/10 text-emerald-700 border-emerald-100',
     'from-amber-500/20 to-orange-500/10 text-amber-700 border-amber-100',
     'from-sky-500/20 to-blue-500/10 text-sky-700 border-sky-100',
     'from-rose-500/20 to-pink-500/10 text-rose-700 border-rose-100',
-    'from-violet-500/20 to-purple-500/10 text-violet-700 border-violet-100',
-  ];
+    'from-violet-500/20 to-purple-500/10 text-violet-700 border-violet-100',];
   let sum = 0;
   for (let i = 0; i < name.length; i++) sum += name.charCodeAt(i);
-  return colors[sum % colors.length];
-};
+  return colors[sum % colors.length];};
 
-export default function POSPage({ cashier, currencySymbol, taxRate, receiptFooter }: POSPageProps) {
-  const { showToast } = useToast();
+export default function POSPage({ cashier, currencySymbol, taxRate, receiptFooter}: POSPageProps) {
+  const { showToast} = useToast();
   const [products, setProducts] = useState<Product[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [barcodeQuery, setBarcodeQuery] = useState('');
@@ -58,51 +50,42 @@ export default function POSPage({ cashier, currencySymbol, taxRate, receiptFoote
   const [tableNumber, setTableNumber] = useState('Table #04');
   const [isEditingTable, setIsEditingTable] = useState(false);
   
-  const barcodeInputRef = useRef<HTMLInputElement>(null);
+  const barcodeInputRef = useRef(null);
 
   const {
-    items: cartItems,
+    items,
     addItem,
     updateQuantity,
     removeItem,
     clearCart,
     applyDiscount,
-    totals
-  } = useCart(taxRate);
+    totals} = useCart(taxRate);
 
   // Live order/table tags for bottom strip
   const [activeTickets, setActiveTickets] = useState([
-    { id: '1', label: 'T1', name: 'John Doe', items: 3, status: 'Kitchen' },
-    { id: '2', label: 'T2', name: 'Alice S.', items: 1, status: 'Process' },
-    { id: '3', label: 'T5', name: 'Table 5', items: 5, status: 'Kitchen' },
-    { id: '4', label: 'T8', name: 'Takeaway #1', items: 2, status: 'Process' },
-  ]);
+    { id: '1', label: 'T1', name: 'John Doe', items, status: 'Kitchen'},
+    { id: '2', label: 'T2', name: 'Alice S.', items, status: 'Process'},
+    { id: '3', label: 'T5', name: 'Table 5', items, status: 'Kitchen'},
+    { id: '4', label: 'T8', name: 'Takeaway #1', items, status: 'Process'},]);
 
   const fetchProducts = async () => {
     try {
       const prods = await localDb.getProducts();
-      setProducts(prods);
-    } catch (e) {
-      console.error('Error loading products for POS:', e);
-    }
-  };
+      setProducts(prods);} catch (e) {
+      console.error('Error loading products for POS:', e);}};
 
   useEffect(() => {
     fetchProducts();
 
     const handleDbUpdated = () => {
-      fetchProducts();
-    };
+      fetchProducts();};
     window.addEventListener('retailer:db-updated', handleDbUpdated);
     return () => {
-      window.removeEventListener('retailer:db-updated', handleDbUpdated);
-    };
-  }, []);
+      window.removeEventListener('retailer:db-updated', handleDbUpdated);};}, []);
 
   const categories = useMemo(() => {
     const list = new Set(products.map(p => p.category).filter(Boolean));
-    return ['All', ...Array.from(list)];
-  }, [products]);
+    return ['All', ...Array.from(list)];}, [products]);
 
   const filteredProducts = useMemo(() => {
     return products.filter(p => {
@@ -111,11 +94,9 @@ export default function POSPage({ cashier, currencySymbol, taxRate, receiptFoote
       const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                             p.sku.toLowerCase().includes(searchQuery.toLowerCase()) ||
                             p.barcode === searchQuery;
-      return matchesCategory && matchesSearch;
-    });
-  }, [products, selectedCategory, searchQuery]);
+      return matchesCategory && matchesSearch;});}, [products, selectedCategory, searchQuery]);
 
-  const handleBarcodeSubmit = (e: React.FormEvent) => {
+  const handleBarcodeSubmit = (e) => {
     e.preventDefault();
     if (!barcodeQuery.trim()) return;
 
@@ -124,24 +105,20 @@ export default function POSPage({ cashier, currencySymbol, taxRate, receiptFoote
       addItem(prod);
       showToast(`Added ${prod.name} to checkout cart`, 'success');
       setBarcodeQuery('');
-      barcodeInputRef.current?.focus();
-    } else {
+      barcodeInputRef.current?.focus();} else {
       showToast(`No product found with barcode "${barcodeQuery}"`, 'warning');
-      setBarcodeQuery('');
-    }
-  };
+      setBarcodeQuery('');}};
 
   const handleCheckout = async () => {
     if (cartItems.length === 0) {
       showToast('Your checkout cart is empty!', 'warning');
-      return;
-    }
+      return;}
 
     const saleId = `sale_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
     const invoiceNumber = `INV-${Date.now().toString().slice(-8)}`;
 
-    const newSale: Sale = {
-      id: saleId,
+    const newSale = {
+      id,
       invoiceNumber,
       cashierId: cashier.id,
       cashierName: cashier.name,
@@ -158,10 +135,8 @@ export default function POSPage({ cashier, currencySymbol, taxRate, receiptFoote
         productName: item.product.name,
         quantity: item.quantity,
         price: item.price,
-        subtotal: item.subtotal
-      })),
-      status: 'pending'
-    };
+        subtotal: item.subtotal})),
+      status: 'pending'};
 
     try {
       await localDb.saveSale(newSale);
@@ -169,11 +144,10 @@ export default function POSPage({ cashier, currencySymbol, taxRate, receiptFoote
       for (const item of cartItems) {
         const prod = products.find(p => p.id === item.product.id);
         if (prod) {
-          const updatedProd: Product = {
+          const updatedProd = {
             ...prod,
             quantity: Math.max(0, prod.quantity - item.quantity),
-            updatedAt: new Date().toISOString()
-          };
+            updatedAt: new Date().toISOString()};
           await localDb.saveProduct(updatedProd);
 
           await localDb.saveInventoryLog({
@@ -183,30 +157,24 @@ export default function POSPage({ cashier, currencySymbol, taxRate, receiptFoote
             type: 'OUT',
             quantity: -item.quantity,
             reason: `POS sale checkout #${invoiceNumber}`,
-            createdAt: new Date().toISOString()
-          });
-        }
-      }
+            createdAt: new Date().toISOString()});}}
 
       await localDb.addSyncQueueItem({
         id: `q_${saleId}`,
         action: 'CREATE_SALE',
-        payload: newSale,
-        createdAt: new Date().toISOString()
-      });
+        payload,
+        createdAt: new Date().toISOString()});
 
       // Update active tickets mock
       const ticketId = Math.random().toString(36).substring(2, 5);
       setActiveTickets(prev => [
         {
-          id: ticketId,
+          id,
           label: `T${Math.floor(Math.random() * 19) + 1}`,
-          name: orderType === 'DINE_IN' ? tableNumber : orderType === 'TAKE_AWAY' ? 'Take Away' : 'Delivery Service',
+          name === 'DINE_IN' ? tableNumber === 'TAKE_AWAY' ? 'Take Away' : 'Delivery Service',
           items: cartItems.reduce((acc, i) => acc + i.quantity, 0),
-          status: 'Kitchen'
-        },
-        ...prev.slice(0, 3)
-      ]);
+          status: 'Kitchen'},
+        ...prev.slice(0, 3)]);
 
       setActiveSale(newSale);
       setShowReceipt(true);
@@ -215,30 +183,23 @@ export default function POSPage({ cashier, currencySymbol, taxRate, receiptFoote
       fetchProducts();
 
       showToast(`Checkout complete! Invoice ${invoiceNumber} generated.`, 'success');
-      syncEngine.sync();
-
-    } catch (e) {
+      syncEngine.sync();} catch (e) {
       console.error('POS checkout transaction failed:', e);
-      showToast('An error occurred while saving the sale locally.', 'error');
-    }
-  };
+      showToast('An error occurred while saving the sale locally.', 'error');}};
 
   const handlePrint = () => {
-    window.print();
-  };
+    window.print();};
 
   // Mock static discount display (Rice and Bread discounted to show secondary yellow badge requirement)
-  const getProductDiscountPercent = (prodId: string) => {
+  const getProductDiscountPercent = (prodId) => {
     if (prodId === 'prod_2') return 10; // Rice (10% off)
     if (prodId === 'prod_5') return 20; // Bread (20% off)
-    return 0;
-  };
+    return 0;};
 
   // Determine if item is veg/non-veg
-  const isVegItem = (name: string) => {
+  const isVegItem = (name) => {
     const lower = name.toLowerCase();
-    return !lower.includes('chicken') && !lower.includes('beef') && !lower.includes('meat') && !lower.includes('fish') && !lower.includes('pork');
-  };
+    return !lower.includes('chicken') && !lower.includes('beef') && !lower.includes('meat') && !lower.includes('fish') && !lower.includes('pork');};
 
   return (
     <div className="flex flex-col h-[calc(100vh-120px)] overflow-hidden">
@@ -297,8 +258,7 @@ export default function POSPage({ cashier, currencySymbol, taxRate, receiptFoote
                   className={`flex-shrink-0 w-24 h-24 rounded-2xl flex flex-col items-center justify-center p-3 transition-all cursor-pointer active:scale-95 shadow-xs border ${
                     isActive
                       ? 'bg-emerald-600 border-emerald-600 text-white shadow-md'
-                      : 'bg-white border-slate-100 text-slate-700 hover:border-slate-200 hover:shadow-sm'
-                  }`}
+                      : 'bg-white border-slate-100 text-slate-700 hover:border-slate-200 hover:shadow-sm'}`}
                 >
                   <div className={`mb-2.5 transition-colors duration-200 ${isActive ? 'text-white' : 'text-emerald-600'}`}>
                     {getCategoryIcon(cat)}
@@ -307,9 +267,7 @@ export default function POSPage({ cashier, currencySymbol, taxRate, receiptFoote
                   <span className={`text-[9px] mt-0.5 font-medium ${isActive ? 'text-emerald-100' : 'text-slate-450'}`}>
                     {products.filter(p => !p.archived && (cat === 'All' || p.category === cat)).length} items
                   </span>
-                </button>
-              );
-            })}
+                </button>);})}
           </div>
 
           {/* Product Cards Grid Area */}
@@ -322,15 +280,14 @@ export default function POSPage({ cashier, currencySymbol, taxRate, receiptFoote
                   We couldn't find any products matching "{searchQuery}" under the "{selectedCategory}" category.
                 </p>
                 <button
-                  onClick={() => { setSearchQuery(''); setSelectedCategory('All'); }}
+                  onClick={() => { setSearchQuery(''); setSelectedCategory('All');}}
                   className="mt-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold rounded-full transition-all cursor-pointer shadow-xs"
                 >
                   Clear Search Filters
                 </button>
-              </div>
-            ) : (
+              </div>) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4 pb-4">
-                <AnimatePresence>
+                
                   {filteredProducts.map((prod) => {
                     const isOutOfStock = prod.quantity <= 0;
                     const isLowStock = prod.quantity <= prod.reorderLevel;
@@ -344,13 +301,12 @@ export default function POSPage({ cashier, currencySymbol, taxRate, receiptFoote
                     return (
                       <motion.div
                         layout
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
+                        initial={{ opacity, scale: 0.95}}
+                        animate={{ opacity, scale: 1}}
+                        exit={{ opacity, scale: 0.95}}
                         key={prod.id}
                         className={`bg-white rounded-2xl border border-slate-100 p-3.5 flex flex-col justify-between h-[215px] hover:shadow-md transition-all group relative overflow-hidden ${
-                          isOutOfStock ? 'opacity-65' : ''
-                        }`}
+                          isOutOfStock ? 'opacity-65' : ''}`}
                       >
                         {/* Rounded Product Photo / Placeholder Design */}
                         <div className={`relative h-24 rounded-xl overflow-hidden bg-gradient-to-br ${getProductColor(prod.name)} flex items-center justify-center font-display font-black text-xl mb-3 border border-slate-100`}>
@@ -361,8 +317,7 @@ export default function POSPage({ cashier, currencySymbol, taxRate, receiptFoote
                             <span className="absolute top-1.5 left-1.5 bg-amber-400 text-slate-950 text-[8px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-0.5 shadow-sm">
                               <Flame className="w-2.5 h-2.5 fill-current" />
                               {discount}% Off
-                            </span>
-                          )}
+                            </span>)}
 
                           {/* Veg/Non-Veg overlay dot */}
                           <span className="absolute top-1.5 right-1.5 bg-white/90 backdrop-blur-xs p-0.5 rounded-md flex items-center shadow-xs">
@@ -379,12 +334,9 @@ export default function POSPage({ cashier, currencySymbol, taxRate, receiptFoote
                               {prod.category}
                             </span>
                             {isOutOfStock ? (
-                              <span className="text-[8px] font-black bg-rose-50 text-rose-600 px-1.5 py-0.25 rounded-full">OUT</span>
-                            ) : isLowStock ? (
-                              <span className="text-[8px] font-black bg-amber-50 text-amber-600 px-1.5 py-0.25 rounded-full">ONLY {prod.quantity}</span>
-                            ) : (
-                              <span className="text-[8px] font-bold text-slate-400">Qty: {prod.quantity}</span>
-                            )}
+                              <span className="text-[8px] font-black bg-rose-50 text-rose-600 px-1.5 py-0.25 rounded-full">OUT</span>) : isLowStock ? (
+                              <span className="text-[8px] font-black bg-amber-50 text-amber-600 px-1.5 py-0.25 rounded-full">ONLY {prod.quantity}</span>) : (
+                              <span className="text-[8px] font-bold text-slate-400">Qty: {prod.quantity}</span>)}
                           </div>
                           <h4 className="text-xs font-bold text-slate-900 truncate leading-snug" title={prod.name}>
                             {prod.name}
@@ -404,18 +356,15 @@ export default function POSPage({ cashier, currencySymbol, taxRate, receiptFoote
                                 className="px-3 py-1 bg-slate-100 text-slate-400 text-[10px] font-bold rounded-full cursor-not-allowed"
                               >
                                 Sold Out
-                              </button>
-                            ) : cartQty === 0 ? (
+                              </button>) : cartQty === 0 ? (
                               <button
                                 onClick={() => {
                                   addItem(prod);
-                                  showToast(`Added ${prod.name} to order`, 'success');
-                                }}
+                                  showToast(`Added ${prod.name} to order`, 'success');}}
                                 className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-extrabold text-[10px] rounded-full transition-all cursor-pointer shadow-xs hover:shadow-sm"
                               >
                                 Add to Dish
-                              </button>
-                            ) : (
+                              </button>) : (
                               <div className="w-full flex items-center justify-between bg-emerald-600 text-white rounded-full p-0.5 shadow-sm">
                                 <button
                                   onClick={() => updateQuantity(prod.id, cartQty - 1)}
@@ -430,17 +379,13 @@ export default function POSPage({ cashier, currencySymbol, taxRate, receiptFoote
                                 >
                                   <Plus className="w-2.5 h-2.5 text-white" />
                                 </button>
-                              </div>
-                            )}
+                              </div>)}
                           </div>
                         </div>
 
-                      </motion.div>
-                    );
-                  })}
+                      </motion.div>);})}
                 </AnimatePresence>
-              </div>
-            )}
+              </div>)}
           </div>
 
         </div>
@@ -450,7 +395,7 @@ export default function POSPage({ cashier, currencySymbol, taxRate, receiptFoote
           
           {/* Header context (Table or order context) */}
           <div className="p-4 border-b border-slate-100 flex items-center justify-between shrink-0">
-            <div>
+            
               {isEditingTable ? (
                 <div className="flex items-center gap-1">
                   <input
@@ -463,8 +408,7 @@ export default function POSPage({ cashier, currencySymbol, taxRate, receiptFoote
                     className="border border-slate-200 rounded px-1.5 py-0.5 text-xs font-bold w-28 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                   />
                   <button onClick={() => setIsEditingTable(false)} className="text-[10px] font-bold text-emerald-600">Save</button>
-                </div>
-              ) : (
+                </div>) : (
                 <div className="flex items-center gap-1.5">
                   <h3 className="font-extrabold text-slate-900 text-sm font-display leading-tight">{tableNumber}</h3>
                   <button 
@@ -473,8 +417,7 @@ export default function POSPage({ cashier, currencySymbol, taxRate, receiptFoote
                   >
                     <Edit2 className="w-3 h-3" />
                   </button>
-                </div>
-              )}
+                </div>)}
               <p className="text-[10px] text-slate-400 font-medium">Cashier Staff: {cashier.name}</p>
             </div>
             
@@ -497,12 +440,10 @@ export default function POSPage({ cashier, currencySymbol, taxRate, receiptFoote
                   className={`flex-1 py-1.5 rounded-full text-[9px] font-extrabold font-display transition-all cursor-pointer text-center uppercase tracking-wider ${
                     orderType === type
                       ? 'bg-slate-900 text-white shadow-xs'
-                      : 'text-slate-500 hover:text-slate-800'
-                  }`}
+                      : 'text-slate-500 hover:text-slate-800'}`}
                 >
                   {type === 'DINE_IN' ? 'Dine In' : type === 'TAKE_AWAY' ? 'Take Away' : 'Delivery'}
-                </button>
-              ))}
+                </button>))}
             </div>
           </div>
 
@@ -517,14 +458,13 @@ export default function POSPage({ cashier, currencySymbol, taxRate, receiptFoote
                 <p className="text-[10px] max-w-[170px] mt-1 text-slate-400">
                   Tappable product cards or barcode scanner will display items in real time here.
                 </p>
-              </div>
-            ) : (
-              <AnimatePresence>
+              </div>) : (
+              
                 {cartItems.map((item) => (
                   <motion.div 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
+                    initial={{ opacity, y: 10}}
+                    animate={{ opacity, y: 0}}
+                    exit={{ opacity, scale: 0.95}}
                     key={item.product.id} 
                     className="flex gap-3 justify-between items-center pb-3 border-b border-slate-100/60"
                   >
@@ -572,15 +512,13 @@ export default function POSPage({ cashier, currencySymbol, taxRate, receiptFoote
 
                     {/* Delete row trigger */}
                     <button 
-                      onClick={() => { removeItem(item.product.id); showToast(`Removed ${item.product.name}`, 'warning'); }}
+                      onClick={() => { removeItem(item.product.id); showToast(`Removed ${item.product.name}`, 'warning');}}
                       className="p-1 text-slate-350 hover:text-rose-600 rounded hover:bg-slate-50 transition-colors cursor-pointer"
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            )}
+                  </motion.div>))}
+              </AnimatePresence>)}
           </div>
 
           {/* Checkout & Summary panel at bottom of right side */}
@@ -607,17 +545,16 @@ export default function POSPage({ cashier, currencySymbol, taxRate, receiptFoote
             {/* Calculations Breakdown */}
             <div className="space-y-1.5 text-xs border-t border-slate-150/60 pt-3">
               <div className="flex justify-between text-slate-500">
-                <span>Subtotal</span>
+                Subtotal</span>
                 <span className="font-mono font-bold text-slate-800">{currencySymbol}{totals.subtotal.toFixed(2)}</span>
               </div>
               {totals.discountAmount > 0 && (
                 <div className="flex justify-between text-rose-650 font-bold bg-rose-50/50 py-0.5 px-1.5 rounded-md">
-                  <span>Discount ({totals.discountPercent}%)</span>
+                  Discount ({totals.discountPercent}%)</span>
                   <span className="font-mono">-{currencySymbol}{totals.discountAmount.toFixed(2)}</span>
-                </div>
-              )}
+                </div>)}
               <div className="flex justify-between text-slate-500">
-                <span>VAT ({taxRate}%)</span>
+                VAT ({taxRate}%)</span>
                 <span className="font-mono font-bold text-slate-800">{currencySymbol}{totals.taxAmount.toFixed(2)}</span>
               </div>
               
@@ -635,8 +572,7 @@ export default function POSPage({ cashier, currencySymbol, taxRate, receiptFoote
                 className={`p-2.5 rounded-xl flex flex-col items-center justify-center border text-center transition-all cursor-pointer active:scale-95 ${
                   paymentMethod === 'CASH'
                     ? 'border-emerald-500 bg-emerald-50 text-emerald-800 shadow-xs font-bold'
-                    : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-800'
-                }`}
+                    : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-800'}`}
               >
                 <Landmark className="w-4 h-4 mb-1" />
                 <span className="text-[9px] font-bold uppercase tracking-wider">Cash</span>
@@ -647,8 +583,7 @@ export default function POSPage({ cashier, currencySymbol, taxRate, receiptFoote
                 className={`p-2.5 rounded-xl flex flex-col items-center justify-center border text-center transition-all cursor-pointer active:scale-95 ${
                   paymentMethod === 'MOBILE_MONEY'
                     ? 'border-emerald-500 bg-emerald-50 text-emerald-800 shadow-xs font-bold'
-                    : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-800'
-                }`}
+                    : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-800'}`}
               >
                 <CreditCard className="w-4 h-4 mb-1" />
                 <span className="text-[9px] font-bold uppercase tracking-wider">Mobile</span>
@@ -659,8 +594,7 @@ export default function POSPage({ cashier, currencySymbol, taxRate, receiptFoote
                 className={`p-2.5 rounded-xl flex flex-col items-center justify-center border text-center transition-all cursor-pointer active:scale-95 ${
                   paymentMethod === 'CARD'
                     ? 'border-emerald-500 bg-emerald-50 text-emerald-800 shadow-xs font-bold'
-                    : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-800'
-                }`}
+                    : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-800'}`}
               >
                 <Landmark className="w-4 h-4 mb-1" />
                 <span className="text-[9px] font-bold uppercase tracking-wider">Card</span>
@@ -692,10 +626,8 @@ export default function POSPage({ cashier, currencySymbol, taxRate, receiptFoote
               <span className="text-[9px] font-bold text-slate-700 font-display">{t.name}</span>
               <span className="text-[9px] text-slate-400 font-mono">({t.items} {t.items === 1 ? 'item' : 'items'})</span>
               <span className={`text-[8px] font-extrabold uppercase tracking-wider px-1.5 py-0.25 rounded-full ${
-                t.status === 'Kitchen' ? 'text-amber-600 bg-amber-50' : 'text-emerald-600 bg-emerald-50'
-              }`}>{t.status}</span>
-            </div>
-          ))}
+                t.status === 'Kitchen' ? 'text-amber-600 bg-amber-50' : 'text-emerald-600 bg-emerald-50'}`}>{t.status}</span>
+            </div>))}
         </div>
       </div>
 
@@ -703,8 +635,8 @@ export default function POSPage({ cashier, currencySymbol, taxRate, receiptFoote
       {showReceipt && activeSale && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <motion.div 
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
+            initial={{ scale: 0.9, opacity: 0}}
+            animate={{ scale, opacity: 1}}
             className="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-sm w-full overflow-hidden flex flex-col max-h-[90vh]"
           >
             
@@ -714,7 +646,7 @@ export default function POSPage({ cashier, currencySymbol, taxRate, receiptFoote
                 <h3 className="font-extrabold text-slate-900 font-display text-xs uppercase tracking-wide">Checkout Success</h3>
               </div>
               <button 
-                onClick={() => { setShowReceipt(false); setActiveSale(null); }}
+                onClick={() => { setShowReceipt(false); setActiveSale(null);}}
                 className="text-xs text-slate-450 hover:text-slate-700 font-semibold cursor-pointer p-1"
               >
                 Close
@@ -730,19 +662,19 @@ export default function POSPage({ cashier, currencySymbol, taxRate, receiptFoote
 
               <div className="space-y-1 text-[10px]">
                 <div className="flex justify-between">
-                  <span>INVOICE NO:</span>
+                  INVOICE NO:</span>
                   <span className="font-bold">{activeSale.invoiceNumber}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>CASHIER:</span>
-                  <span>{activeSale.cashierName}</span>
+                  CASHIER:</span>
+                  {activeSale.cashierName}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>DATE-TIME:</span>
-                  <span>{new Date(activeSale.createdAt).toLocaleString()}</span>
+                  DATE-TIME:</span>
+                  {new Date(activeSale.createdAt).toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>PAYMENT MODE:</span>
+                  PAYMENT MODE:</span>
                   <span className="font-bold">{activeSale.paymentMethod.replace('_', ' ')}</span>
                 </div>
               </div>
@@ -760,29 +692,27 @@ export default function POSPage({ cashier, currencySymbol, taxRate, receiptFoote
                     <span className="col-span-2 truncate font-sans text-slate-800">{item.productName}</span>
                     <span className="text-center font-mono">{item.quantity}</span>
                     <span className="text-right font-mono">{currencySymbol}{(item.price * item.quantity).toFixed(2)}</span>
-                  </div>
-                ))}
+                  </div>))}
               </div>
 
               <div className="border-t border-dashed border-slate-300" />
 
               <div className="space-y-1 text-[10px]">
                 <div className="flex justify-between">
-                  <span>Subtotal:</span>
+                  Subtotal:</span>
                   <span className="font-mono">{currencySymbol}{activeSale.subtotal.toFixed(2)}</span>
                 </div>
                 {activeSale.discountAmount > 0 && (
                   <div className="flex justify-between text-rose-600 font-bold">
-                    <span>Discount Amount:</span>
+                    Discount Amount:</span>
                     <span className="font-mono">-{currencySymbol}{activeSale.discountAmount.toFixed(2)}</span>
-                  </div>
-                )}
+                  </div>)}
                 <div className="flex justify-between">
-                  <span>VAT ({taxRate}%):</span>
+                  VAT ({taxRate}%):</span>
                   <span className="font-mono">{currencySymbol}{activeSale.taxAmount.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-xs font-black text-slate-900 pt-2 border-t border-dotted border-slate-300">
-                  <span>TOTAL PAID:</span>
+                  TOTAL PAID:</span>
                   <span className="font-mono">{currencySymbol}{activeSale.total.toFixed(2)}</span>
                 </div>
               </div>
@@ -797,7 +727,7 @@ export default function POSPage({ cashier, currencySymbol, taxRate, receiptFoote
 
             <div className="p-4 bg-slate-50 border-t border-slate-150 flex gap-3 select-none">
               <button
-                onClick={() => { setShowReceipt(false); setActiveSale(null); }}
+                onClick={() => { setShowReceipt(false); setActiveSale(null);}}
                 className="flex-1 py-2 px-3 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl text-xs font-bold transition-all cursor-pointer text-center active:scale-95"
               >
                 Close
@@ -812,9 +742,6 @@ export default function POSPage({ cashier, currencySymbol, taxRate, receiptFoote
             </div>
 
           </motion.div>
-        </div>
-      )}
+        </div>)}
 
-    </div>
-  );
-}
+    </div>);}

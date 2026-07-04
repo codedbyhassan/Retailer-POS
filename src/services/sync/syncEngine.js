@@ -1,10 +1,10 @@
-import { localDb } from '../indexeddb/db';
-import { apiClient } from '../api';
+import { localDb } from '../indexeddb/db.js';
+import { apiClient } from '../api.js';
 
 export class SyncEngine {
-  private isSyncing = false;
-
   constructor() {
+    this.isSyncing = false;
+
     // Listen for online events to automatically trigger synchronization
     if (typeof window !== 'undefined') {
       window.addEventListener('online', () => {
@@ -14,7 +14,7 @@ export class SyncEngine {
     }
   }
 
-  public async sync(): Promise<{ success: boolean; syncedCount: number; error?: string }> {
+  async sync() {
     if (this.isSyncing) {
       return { success: false, syncedCount: 0, error: 'Sync already in progress' };
     }
@@ -104,7 +104,7 @@ export class SyncEngine {
       this.dispatchEvent('db-updated');
 
       return { success: true, syncedCount: syncedIds.length };
-    } catch (err: any) {
+    } catch (err) {
       console.error('[v0] SyncEngine failed:', err);
       this.isSyncing = false;
       this.dispatchEvent('sync-error', { error: err.message });
@@ -113,7 +113,7 @@ export class SyncEngine {
   }
 
   // Trigger outbound events via DOM so multiple React elements can listen
-  private dispatchEvent(name: string, detail: any = {}) {
+  dispatchEvent(name, detail = {}) {
     if (typeof window !== 'undefined') {
       const event = new CustomEvent(`retailer:${name}`, { detail });
       window.dispatchEvent(event);

@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
-import { localDb } from '../services/indexeddb/db';
-import { syncEngine } from '../services/sync/syncEngine';
+import { localDb } from '../services/indexeddb/db.js';
+import { syncEngine } from '../services/sync/syncEngine.js';
 
 export function useSyncStatus() {
-  const [pendingCount, setPendingCount] = useState<number>(0);
-  const [isSyncing, setIsSyncing] = useState<boolean>(false);
-  const [lastSyncTime, setLastSyncTime] = useState<string | null>(
+  const [pendingCount, setPendingCount] = useState(0);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [lastSyncTime, setLastSyncTime] = useState(
     typeof window !== 'undefined' ? localStorage.getItem('retailer_last_sync_time') : null
   );
 
@@ -27,7 +27,7 @@ export function useSyncStatus() {
       setIsSyncing(true);
     };
 
-    const handleSyncComplete = (e: Event) => {
+    const handleSyncComplete = (e) => {
       setIsSyncing(false);
       setLastSyncTime(localStorage.getItem('retailer_last_sync_time'));
       fetchQueueCount();

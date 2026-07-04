@@ -1,16 +1,14 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { localDb } from '../services/indexeddb/db';
-import { Product } from '../types';
-import { syncEngine } from '../services/sync/syncEngine';
-import { useToast } from '../hooks/useToast';
-import { Plus, Search, Edit2, Archive, Trash2, X, Filter, Package, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect, useMemo} from "react";
+import { localDb} from "../services/indexeddb/db";
+import { Product} from "../types";
+import { syncEngine} from "../services/sync/syncEngine";
+import { useToast} from "../hooks/useToast";
+import { Plus, Search, Edit2, Archive, Trash2, X, Filter, Package, AlertCircle} from "lucide-react";
 
-interface ProductsPageProps {
-  currencySymbol: string;
-}
 
-export default function ProductsPage({ currencySymbol }: ProductsPageProps) {
-  const { showToast } = useToast();
+
+export default function ProductsPage({ currencySymbol}: ProductsPageProps) {
+  const { showToast} = useToast();
   const [products, setProducts] = useState<Product[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -25,40 +23,32 @@ export default function ProductsPage({ currencySymbol }: ProductsPageProps) {
   const [sku, setSku] = useState('');
   const [barcode, setBarcode] = useState('');
   const [category, setCategory] = useState('');
-  const [costPrice, setCostPrice] = useState<number>(0);
-  const [sellingPrice, setSellingPrice] = useState<number>(0);
-  const [quantity, setQuantity] = useState<number>(0);
-  const [reorderLevel, setReorderLevel] = useState<number>(5);
+  const [costPrice, setCostPrice] = useState(0);
+  const [sellingPrice, setSellingPrice] = useState(0);
+  const [quantity, setQuantity] = useState(0);
+  const [reorderLevel, setReorderLevel] = useState(5);
 
   const fetchProducts = async () => {
     try {
       setLoading(true);
       const list = await localDb.getProducts();
-      setProducts(list);
-    } catch (e) {
-      console.error('Error loading products:', e);
-    } finally {
-      setLoading(false);
-    }
-  };
+      setProducts(list);} catch (e) {
+      console.error('Error loading products:', e);} finally {
+      setLoading(false);}};
 
   useEffect(() => {
     fetchProducts();
 
     // Listen for database sync refreshes
     const handleDbUpdated = () => {
-      fetchProducts();
-    };
+      fetchProducts();};
     window.addEventListener('retailer:db-updated', handleDbUpdated);
     return () => {
-      window.removeEventListener('retailer:db-updated', handleDbUpdated);
-    };
-  }, []);
+      window.removeEventListener('retailer:db-updated', handleDbUpdated);};}, []);
 
   const categories = useMemo(() => {
     const list = new Set(products.map(p => p.category).filter(Boolean));
-    return ['All', ...Array.from(list)];
-  }, [products]);
+    return ['All', ...Array.from(list)];}, [products]);
 
   const filteredProducts = useMemo(() => {
     return products.filter(p => {
@@ -66,9 +56,7 @@ export default function ProductsPage({ currencySymbol }: ProductsPageProps) {
       const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                             p.sku.toLowerCase().includes(searchQuery.toLowerCase()) ||
                             p.barcode.includes(searchQuery);
-      return matchesCategory && matchesSearch;
-    });
-  }, [products, selectedCategory, searchQuery]);
+      return matchesCategory && matchesSearch;});}, [products, selectedCategory, searchQuery]);
 
   const openAddModal = () => {
     setEditingProduct(null);
@@ -82,10 +70,9 @@ export default function ProductsPage({ currencySymbol }: ProductsPageProps) {
     setSellingPrice(0);
     setQuantity(0);
     setReorderLevel(5);
-    setShowModal(true);
-  };
+    setShowModal(true);};
 
-  const openEditModal = (prod: Product) => {
+  const openEditModal = (prod) => {
     setEditingProduct(prod);
     setName(prod.name);
     setSku(prod.sku);
@@ -95,26 +82,22 @@ export default function ProductsPage({ currencySymbol }: ProductsPageProps) {
     setSellingPrice(prod.sellingPrice);
     setQuantity(prod.quantity);
     setReorderLevel(prod.reorderLevel);
-    setShowModal(true);
-  };
+    setShowModal(true);};
 
-  const handleSave = async (e: React.FormEvent) => {
+  const handleSave = async (e) => {
     e.preventDefault();
     if (!name.trim() || !sku.trim() || !barcode.trim() || !category.trim()) {
       alert('Please fill in all mandatory fields.');
-      return;
-    }
+      return;}
 
     if (sellingPrice < costPrice) {
       if (!confirm('Warning: The selling price is lower than the cost price. Do you want to proceed?')) {
-        return;
-      }
-    }
+        return;}}
 
     try {
       if (editingProduct) {
         // Edit existing product
-        const updated: Product = {
+        const updated = {
           ...editingProduct,
           name: name.trim(),
           sku: sku.trim(),
@@ -123,23 +106,19 @@ export default function ProductsPage({ currencySymbol }: ProductsPageProps) {
           costPrice: Number(costPrice),
           sellingPrice: Number(sellingPrice),
           reorderLevel: Number(reorderLevel),
-          updatedAt: new Date().toISOString()
-        };
+          updatedAt: new Date().toISOString()};
 
         await localDb.saveProduct(updated);
         await localDb.addSyncQueueItem({
           id: `q_edit_${updated.id}_${Date.now()}`,
           action: 'UPDATE_PRODUCT',
-          payload: updated,
-          createdAt: new Date().toISOString()
-        });
-        showToast(`Product "${updated.name}" updated successfully!`, 'success');
-
-      } else {
+          payload,
+          createdAt: new Date().toISOString()});
+        showToast(`Product "${updated.name}" updated successfully!`, 'success');} else {
         // Create new product
         const newId = `prod_${Date.now()}`;
-        const newProduct: Product = {
-          id: newId,
+        const newProduct = {
+          id,
           name: name.trim(),
           sku: sku.trim(),
           barcode: barcode.trim(),
@@ -148,67 +127,54 @@ export default function ProductsPage({ currencySymbol }: ProductsPageProps) {
           sellingPrice: Number(sellingPrice),
           quantity: Number(quantity),
           reorderLevel: Number(reorderLevel),
-          archived: false,
+          archived,
           createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        };
+          updatedAt: new Date().toISOString()};
 
         await localDb.saveProduct(newProduct);
         await localDb.addSyncQueueItem({
           id: `q_add_${newId}_${Date.now()}`,
           action: 'CREATE_PRODUCT',
-          payload: newProduct,
-          createdAt: new Date().toISOString()
-        });
-        showToast(`Product "${newProduct.name}" created successfully!`, 'success');
-      }
+          payload,
+          createdAt: new Date().toISOString()});
+        showToast(`Product "${newProduct.name}" created successfully!`, 'success');}
 
       setShowModal(false);
       fetchProducts();
       
       // Auto-trigger background sync
-      syncEngine.sync();
-
-    } catch (e) {
+      syncEngine.sync();} catch (e) {
       console.error('Error saving product:', e);
-      showToast('An error occurred while saving the product.', 'error');
-    }
-  };
+      showToast('An error occurred while saving the product.', 'error');}};
 
-  const handleArchive = async (prod: Product) => {
+  const handleArchive = async (prod) => {
     if (!confirm(`Are you sure you want to archive "${prod.name}"? It will be removed from the POS catalog.`)) {
-      return;
-    }
+      return;}
 
     try {
-      const archivedProd: Product = {
+      const archivedProd = {
         ...prod,
-        archived: true,
-        updatedAt: new Date().toISOString()
-      };
+        archived,
+        updatedAt: new Date().toISOString()};
 
       await localDb.saveProduct(archivedProd);
       await localDb.addSyncQueueItem({
         id: `q_arch_${prod.id}_${Date.now()}`,
         action: 'ARCHIVE_PRODUCT',
-        payload: { id: prod.id },
-        createdAt: new Date().toISOString()
-      });
+        payload: { id: prod.id},
+        createdAt: new Date().toISOString()});
 
       showToast(`Product "${prod.name}" archived successfully!`, 'success');
       fetchProducts();
-      syncEngine.sync();
-    } catch (e) {
+      syncEngine.sync();} catch (e) {
       console.error('Failed to archive product:', e);
-      showToast(`Failed to archive "${prod.name}"`, 'error');
-    }
-  };
+      showToast(`Failed to archive "${prod.name}"`, 'error');}};
 
   return (
     <div className="space-y-6">
       
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
+        
           <h2 className="text-lg font-bold text-slate-900 font-display">Product Catalog</h2>
           <p className="text-xs text-slate-500">Manage products, pricing, categories and offline inventories</p>
         </div>
@@ -246,12 +212,10 @@ export default function ProductsPage({ currencySymbol }: ProductsPageProps) {
               className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 selectedCategory === cat
                   ? 'bg-indigo-600 text-white shadow-xs'
-                  : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-              }`}
+                  : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
             >
               {cat}
-            </button>
-          ))}
+            </button>))}
         </div>
 
       </div>
@@ -259,8 +223,7 @@ export default function ProductsPage({ currencySymbol }: ProductsPageProps) {
       {loading ? (
         <div className="bg-white p-12 text-center border border-slate-200 rounded-xl shadow-sm">
           <p className="text-xs font-bold text-slate-500">Retrieving product registry...</p>
-        </div>
-      ) : filteredProducts.length === 0 ? (
+        </div>) : filteredProducts.length === 0 ? (
         <div className="bg-white py-16 text-center border border-slate-200 rounded-xl shadow-sm">
           <Package className="w-10 h-10 mx-auto text-slate-300 stroke-1 mb-2" />
           <p className="text-sm font-bold text-slate-900 font-display">
@@ -273,25 +236,22 @@ export default function ProductsPage({ currencySymbol }: ProductsPageProps) {
           </p>
           {searchQuery || selectedCategory !== 'All' ? (
             <button 
-              onClick={() => { setSearchQuery(''); setSelectedCategory('All'); }}
+              onClick={() => { setSearchQuery(''); setSelectedCategory('All');}}
               className="mt-4 px-3.5 py-2 bg-indigo-650 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold cursor-pointer transition-colors shadow-sm"
             >
               Reset Filters
-            </button>
-          ) : (
+            </button>) : (
             <button 
               onClick={openAddModal}
               className="mt-4 px-3.5 py-2 bg-indigo-650 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold cursor-pointer transition-colors shadow-sm"
             >
               Create first product
-            </button>
-          )}
-        </div>
-      ) : (
+            </button>)}
+        </div>) : (
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-left">
-              <thead>
+              
                 <tr className="bg-slate-50/50 border-b border-slate-150 text-slate-500 text-[10px] font-bold uppercase tracking-wider">
                   <th className="py-3 px-6">Name</th>
                   <th className="py-3 px-6">Category</th>
@@ -319,8 +279,8 @@ export default function ProductsPage({ currencySymbol }: ProductsPageProps) {
                         </span>
                       </td>
                       <td className="py-3 px-6 font-mono text-[11px] text-slate-500 space-y-0.5">
-                        <div>SKU: {prod.sku}</div>
-                        <div>BAR: {prod.barcode}</div>
+                        SKU: {prod.sku}</div>
+                        BAR: {prod.barcode}</div>
                       </td>
                       <td className="py-3 px-6 text-right font-mono text-slate-600">
                         {currencySymbol}{prod.costPrice.toFixed(2)}
@@ -332,19 +292,16 @@ export default function ProductsPage({ currencySymbol }: ProductsPageProps) {
                         {isOutOfStock ? (
                           <span className="inline-block text-[10px] font-bold bg-rose-50 text-rose-700 px-2 py-0.5 rounded">
                             Out of Stock
-                          </span>
-                        ) : isLowStock ? (
+                          </span>) : isLowStock ? (
                           <div className="space-y-0.5">
                             <span className="inline-block text-[10px] font-bold bg-amber-50 text-amber-700 px-2 py-0.5 rounded">
                               Low Stock: {prod.quantity}
                             </span>
                             <div className="text-[9px] text-slate-400">Alert threshold: {prod.reorderLevel}</div>
-                          </div>
-                        ) : (
+                          </div>) : (
                           <span className="inline-block text-[10px] font-bold bg-emerald-50 text-emerald-700 px-2.5 py-0.5 rounded font-mono">
                             {prod.quantity}
-                          </span>
-                        )}
+                          </span>)}
                       </td>
                       <td className="py-3 px-6 text-right">
                         <div className="flex justify-end gap-1.5">
@@ -364,14 +321,11 @@ export default function ProductsPage({ currencySymbol }: ProductsPageProps) {
                           </button>
                         </div>
                       </td>
-                    </tr>
-                  );
-                })}
+                    </tr>);})}
               </tbody>
             </table>
           </div>
-        </div>
-      )}
+        </div>)}
 
       {showModal && (
         <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -482,8 +436,7 @@ export default function ProductsPage({ currencySymbol }: ProductsPageProps) {
                     className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs font-mono disabled:opacity-50 disabled:bg-slate-50 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow"
                   />
                   {editingProduct && (
-                    <p className="text-[9px] text-slate-400 font-medium">Qty handled via Inventory panel.</p>
-                  )}
+                    <p className="text-[9px] text-slate-400 font-medium">Qty handled via Inventory panel.</p>)}
                 </div>
                 <div className="space-y-1.5">
                   <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Reorder Level Alert *</label>
@@ -518,9 +471,6 @@ export default function ProductsPage({ currencySymbol }: ProductsPageProps) {
             </form>
 
           </div>
-        </div>
-      )}
+        </div>)}
 
-    </div>
-  );
-}
+    </div>);}

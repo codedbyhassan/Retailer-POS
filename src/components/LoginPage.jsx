@@ -1,24 +1,21 @@
-import React, { useState } from 'react';
-import { Shield, Mail, Lock, ShoppingBag } from 'lucide-react';
-import { motion } from 'motion/react';
+import React, { useState} from "react";
+import { Shield, Mail, Lock, ShoppingBag} from "lucide-react";
+import { motion} from "motion/react";
 
-interface LoginPageProps {
-  onLogin: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  isOnline: boolean;
-}
+>;
+  isOnline: boolean;}
 
-export default function LoginPage({ onLogin, isOnline }: LoginPageProps) {
+export default function LoginPage({ onLogin, isOnline}: LoginPageProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!email || !password) {
       setErrorMsg('Please specify both email and password.');
-      return;
-    }
+      return;}
 
     setLoading(true);
     setErrorMsg('');
@@ -26,18 +23,16 @@ export default function LoginPage({ onLogin, isOnline }: LoginPageProps) {
     const res = await onLogin(email, password);
     if (!res.success) {
       setErrorMsg(res.error || 'Invalid login credentials.');
-      setLoading(false);
-    }
-  };
+      setLoading(false);}};
 
 
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
       <motion.div 
-        initial={{ opacity: 0, y: -15 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
+        initial={{ opacity, y: -15}}
+        animate={{ opacity, y: 0}}
+        transition={{ duration: 0.4}}
         className="sm:mx-auto sm:w-full sm:max-w-md relative z-10"
       >
         {/* Brand Rounded Logo Mark */}
@@ -57,20 +52,18 @@ export default function LoginPage({ onLogin, isOnline }: LoginPageProps) {
             <span className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-wider bg-emerald-50 text-emerald-700 px-2.5 py-0.5 rounded-full font-bold border border-emerald-100">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
               Connected
-            </span>
-          ) : (
+            </span>) : (
             <span className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-wider bg-amber-50 text-amber-700 px-2.5 py-0.5 rounded-full font-bold border border-amber-100">
               <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-pulse" />
               Offline mode
-            </span>
-          )}
+            </span>)}
         </div>
       </motion.div>
 
       <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.1 }}
+        initial={{ opacity, y: 20}}
+        animate={{ opacity, y: 0}}
+        transition={{ duration: 0.5, delay: 0.1}}
         className="mt-8 sm:mx-auto sm:w-full sm:max-w-md relative z-10 px-4"
       >
         <div className="bg-white py-8 px-6 border border-slate-100 shadow-xl rounded-3xl sm:px-10">
@@ -78,8 +71,7 @@ export default function LoginPage({ onLogin, isOnline }: LoginPageProps) {
             {errorMsg && (
               <div className="bg-rose-50 border border-rose-100 text-rose-700 p-3.5 rounded-2xl text-xs leading-relaxed font-semibold">
                 {errorMsg}
-              </div>
-            )}
+              </div>)}
 
             <div className="space-y-1.5">
               <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-widest pl-1">Email Address</label>
@@ -123,6 +115,4 @@ export default function LoginPage({ onLogin, isOnline }: LoginPageProps) {
 
         </div>
       </motion.div>
-    </div>
-  );
-}
+    </div>);}

@@ -65,40 +65,43 @@ async function startServer() {
     });
     app.use(vite.middlewares);
     
-    // SPA fallback - serve index.html for all non-API routes
-    app.get(/^(?!\/api\/).*$/, (req, res, next) => {
-      // Skip if it's an API route or already handled
+    // SPA fallback for page routes (not files)
+    app.get('*', async (req, res, next) => {
+      // Skip API routes
       if (req.path.startsWith('/api/')) {
         return next();
       }
       
-      // For all other requests, use Vite's transform index page
-      res.setHeader('Content-Type', 'text/html');
-      return vite.transformIndexHtml(req.url, `
-        <!doctype html>
-        <html lang="en">
-          <head>
-            <script type="module">import { injectIntoGlobalHook } from "/@react-refresh";
-injectIntoGlobalHook(window);
-window.$RefreshReg$ = () => {};
-window.$RefreshSig$ = () => (type) => type;</script>
-            <script type="module" src="/@vite/client"></script>
-            <meta charset="UTF-8" />
-            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-            <meta name="description" content="Retailer POS is an offline-first retail management system for point-of-sale, inventory control, and reporting." />
-            <title>Retailer POS & Inventory System</title>
-          </head>
-          <body>
-            <div id="root"></div>
-            <script type="module" src="/src/main.tsx"></script>
-          </body>
-        </html>
-      `).then(html => res.end(html)).catch(next);
+      try {
+        // For page routes, serve and transform the index.html
+        let html = `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Retailer POS is an offline-first retail management system for point-of-sale, inventory control, and reporting." />
+    <title>Retailer POS & Inventory System</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>`;
+        
+        html = await vite.transformIndexHtml(req.url, html);
+        res.setHeader('Content-Type', 'text/html');
+        res.end(html);
+      } catch (e) {
+        next(e);
+      }
     });
   } else {
     const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
-    app.get(/^(?!\/api\/).*$/, (req, res) => {
+    app.get('*', (req, res) => {
+      if (req.path.startsWith('/api/')) {
+        return res.status(404).json({ error: 'Not Found' });
+      }
       res.sendFile(path.join(distPath, 'index.html'));
     });
   }

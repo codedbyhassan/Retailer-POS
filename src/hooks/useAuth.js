@@ -1,12 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
-import { User } from '../types';
-import { localDb } from '../services/indexeddb/db';
-import { apiClient } from '../services/api';
+import { localDb } from '../services/indexeddb/db.js';
+import { apiClient } from '../services/api.js';
 
 export function useAuth() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const fetchCurrentUser = useCallback(async () => {
     const hasToken = apiClient.isAuthenticated();
@@ -55,7 +54,7 @@ export function useAuth() {
     fetchCurrentUser();
   }, [fetchCurrentUser]);
 
-  const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+  const login = async (email, password) => {
     setError(null);
     setLoading(true);
 
@@ -90,7 +89,7 @@ export function useAuth() {
         setError(errorMsg);
         return { success: false, error: errorMsg };
       }
-    } catch (e: any) {
+    } catch (e) {
       setLoading(false);
       const errorMsg = e.message || 'An error occurred during login';
       setError(errorMsg);

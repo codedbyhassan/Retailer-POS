@@ -1,44 +1,32 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
-
-interface ApiResponse<T> {
-  data?: T;
-  error?: string;
-  details?: any;
-}
-
-interface AuthTokens {
-  accessToken: string;
-  refreshToken: string;
-}
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 class ApiClient {
-  private accessToken: string | null = null;
-  private refreshToken: string | null = null;
-
   constructor() {
+    this.accessToken = null;
+    this.refreshToken = null;
     this.loadTokens();
   }
 
-  private loadTokens() {
+  loadTokens() {
     this.accessToken = localStorage.getItem('accessToken');
     this.refreshToken = localStorage.getItem('refreshToken');
   }
 
-  private saveTokens(tokens: AuthTokens) {
+  saveTokens(tokens) {
     this.accessToken = tokens.accessToken;
     this.refreshToken = tokens.refreshToken;
     localStorage.setItem('accessToken', tokens.accessToken);
     localStorage.setItem('refreshToken', tokens.refreshToken);
   }
 
-  private clearTokens() {
+  clearTokens() {
     this.accessToken = null;
     this.refreshToken = null;
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
   }
 
-  private async refreshAccessToken(): Promise<boolean> {
+  async refreshAccessToken() {
     if (!this.refreshToken) return false;
 
     try {
@@ -61,12 +49,9 @@ class ApiClient {
     return false;
   }
 
-  private async request<T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<ApiResponse<T>> {
+  async request(endpoint, options = {}) {
     const url = `${API_BASE_URL}${endpoint}`;
-    const headers: HeadersInit = {
+    const headers = {
       'Content-Type': 'application/json',
       ...options.headers,
     };
@@ -97,14 +82,14 @@ class ApiClient {
 
       const data = await response.json();
       return { data };
-    } catch (error: any) {
+    } catch (error) {
       return { error: error.message || 'Network error' };
     }
   }
 
   // Auth endpoints
-  async login(email: string, password: string) {
-    const response = await this.request<any>('/auth/login', {
+  async login(email, password) {
+    const response = await this.request('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     });
@@ -129,14 +114,14 @@ class ApiClient {
     return this.request(`/products?limit=${limit}&offset=${offset}`);
   }
 
-  async createProduct(product: any) {
+  async createProduct(product) {
     return this.request('/products', {
       method: 'POST',
       body: JSON.stringify(product),
     });
   }
 
-  async updateProduct(id: string, product: any) {
+  async updateProduct(id, product) {
     return this.request(`/products/${id}`, {
       method: 'PUT',
       body: JSON.stringify(product),
@@ -144,7 +129,7 @@ class ApiClient {
   }
 
   // Sales endpoints
-  async createSale(sale: any) {
+  async createSale(sale) {
     return this.request('/sales', {
       method: 'POST',
       body: JSON.stringify(sale),
@@ -160,7 +145,7 @@ class ApiClient {
     return this.request(`/inventory?limit=${limit}&offset=${offset}`);
   }
 
-  async adjustInventory(productId: string, quantity: number, reason: string) {
+  async adjustInventory(productId, quantity, reason) {
     return this.request('/inventory/adjust', {
       method: 'POST',
       body: JSON.stringify({ productId, quantity, reason }),
@@ -168,7 +153,7 @@ class ApiClient {
   }
 
   // Reports endpoints
-  async getSalesReport(startDate: string, endDate: string) {
+  async getSalesReport(startDate, endDate) {
     return this.request(`/reports/sales?startDate=${startDate}&endDate=${endDate}`);
   }
 
@@ -177,7 +162,7 @@ class ApiClient {
   }
 
   // Sync endpoints
-  async syncData(queue: any[]) {
+  async syncData(queue) {
     return this.request('/sync', {
       method: 'POST',
       body: JSON.stringify({ queue }),
@@ -189,25 +174,25 @@ class ApiClient {
     return this.request('/users');
   }
 
-  async createUser(user: any) {
+  async createUser(user) {
     return this.request('/users', {
       method: 'POST',
       body: JSON.stringify(user),
     });
   }
 
-  async updateUser(id: string, user: any) {
+  async updateUser(id, user) {
     return this.request(`/users/${id}`, {
       method: 'PUT',
       body: JSON.stringify(user),
     });
   }
 
-  isAuthenticated(): boolean {
+  isAuthenticated() {
     return !!this.accessToken;
   }
 
-  setAccessToken(token: string) {
+  setAccessToken(token) {
     this.accessToken = token;
     localStorage.setItem('accessToken', token);
   }

@@ -1,16 +1,14 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { localDb } from '../services/indexeddb/db';
-import { Product, InventoryLog } from '../types';
-import { syncEngine } from '../services/sync/syncEngine';
-import { useToast } from '../hooks/useToast';
-import { Plus, ArrowDownUp, ShieldAlert, CheckCircle, Package, History, AlertTriangle, ArrowUpRight, ArrowDownRight, RefreshCw, X } from 'lucide-react';
+import React, { useState, useEffect, useMemo} from "react";
+import { localDb} from "../services/indexeddb/db";
+import { Product, InventoryLog} from "../types";
+import { syncEngine} from "../services/sync/syncEngine";
+import { useToast} from "../hooks/useToast";
+import { Plus, ArrowDownUp, ShieldAlert, CheckCircle, Package, History, AlertTriangle, ArrowUpRight, ArrowDownRight, RefreshCw, X} from "lucide-react";
 
-interface InventoryPageProps {
-  currencySymbol: string;
-}
 
-export default function InventoryPage({ currencySymbol }: InventoryPageProps) {
-  const { showToast } = useToast();
+
+export default function InventoryPage({ currencySymbol}: InventoryPageProps) {
+  const { showToast} = useToast();
   const [products, setProducts] = useState<Product[]>([]);
   const [logs, setLogs] = useState<InventoryLog[]>([]);
   const [loading, setLoading] = useState(true);
@@ -19,7 +17,7 @@ export default function InventoryPage({ currencySymbol }: InventoryPageProps) {
   const [showModal, setShowModal] = useState(false);
   const [selectedProductId, setSelectedProductId] = useState('');
   const [adjustmentType, setAdjustmentType] = useState<'IN' | 'OUT' | 'ADJUST'>('IN');
-  const [adjustmentQuantity, setAdjustmentQuantity] = useState<number>(0);
+  const [adjustmentQuantity, setAdjustmentQuantity] = useState(0);
   const [reason, setReason] = useState('');
 
   const loadData = async () => {
@@ -29,47 +27,36 @@ export default function InventoryPage({ currencySymbol }: InventoryPageProps) {
       const logsList = await localDb.getInventoryLogs();
       setProducts(prods);
       // Sort logs chronologically descending
-      setLogs([...logsList].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
-    } catch (e) {
-      console.error('Error fetching inventory data:', e);
-    } finally {
-      setLoading(false);
-    }
-  };
+      setLogs([...logsList].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));} catch (e) {
+      console.error('Error fetching inventory data:', e);} finally {
+      setLoading(false);}};
 
   useEffect(() => {
     loadData();
 
     // Listen for database sync refreshes
     const handleDbUpdated = () => {
-      loadData();
-    };
+      loadData();};
     window.addEventListener('retailer:db-updated', handleDbUpdated);
     return () => {
-      window.removeEventListener('retailer:db-updated', handleDbUpdated);
-    };
-  }, []);
+      window.removeEventListener('retailer:db-updated', handleDbUpdated);};}, []);
 
-  const handleAdjustStock = async (e: React.FormEvent) => {
+  const handleAdjustStock = async (e) => {
     e.preventDefault();
     if (!selectedProductId) {
       alert('Please select a product.');
-      return;
-    }
+      return;}
     if (adjustmentQuantity <= 0) {
       alert('Please specify a positive quantity value.');
-      return;
-    }
+      return;}
     if (!reason.trim()) {
       alert('Please specify an adjustment reason.');
-      return;
-    }
+      return;}
 
     const prod = products.find(p => p.id === selectedProductId);
     if (!prod) {
       alert('Selected product not found.');
-      return;
-    }
+      return;}
 
     try {
       // Calculate new quantity
@@ -78,34 +65,29 @@ export default function InventoryPage({ currencySymbol }: InventoryPageProps) {
 
       if (adjustmentType === 'IN') {
         qDelta = adjustmentQuantity;
-        newQty += adjustmentQuantity;
-      } else if (adjustmentType === 'OUT') {
+        newQty += adjustmentQuantity;} else if (adjustmentType === 'OUT') {
         qDelta = -adjustmentQuantity;
-        newQty = Math.max(0, newQty - adjustmentQuantity);
-      } else if (adjustmentType === 'ADJUST') {
+        newQty = Math.max(0, newQty - adjustmentQuantity);} else if (adjustmentType === 'ADJUST') {
         qDelta = adjustmentQuantity - prod.quantity;
-        newQty = adjustmentQuantity;
-      }
+        newQty = adjustmentQuantity;}
 
       // 1. Save updated product quantity
-      const updatedProduct: Product = {
+      const updatedProduct = {
         ...prod,
-        quantity: newQty,
-        updatedAt: new Date().toISOString()
-      };
+        quantity,
+        updatedAt: new Date().toISOString()};
       await localDb.saveProduct(updatedProduct);
 
       // 2. Create local inventory log
       const logId = `log_adjust_${Date.now()}`;
-      const newLog: InventoryLog = {
-        id: logId,
+      const newLog = {
+        id,
         productId: prod.id,
         productName: prod.name,
-        type: adjustmentType,
-        quantity: qDelta,
+        type,
+        quantity,
         reason: reason.trim(),
-        createdAt: new Date().toISOString()
-      };
+        createdAt: new Date().toISOString()};
       await localDb.saveInventoryLog(newLog);
 
       // 3. Queue action
@@ -113,14 +95,12 @@ export default function InventoryPage({ currencySymbol }: InventoryPageProps) {
         id: `q_adj_${logId}`,
         action: 'ADJUST_STOCK',
         payload: {
-          id: logId,
+          id,
           productId: prod.id,
-          type: adjustmentType,
-          quantity: qDelta,
-          reason: reason.trim()
-        },
-        createdAt: new Date().toISOString()
-      });
+          type,
+          quantity,
+          reason: reason.trim()},
+        createdAt: new Date().toISOString()});
 
       setShowModal(false);
       setSelectedProductId('');
@@ -134,13 +114,9 @@ export default function InventoryPage({ currencySymbol }: InventoryPageProps) {
       showToast(`Stock for "${prod.name}" adjusted successfully!`, 'success');
 
       // Trigger auto-sync
-      syncEngine.sync();
-
-    } catch (err) {
+      syncEngine.sync();} catch (err) {
       console.error('Adjustment failed:', err);
-      showToast('An error occurred while saving the inventory adjustment.', 'error');
-    }
-  };
+      showToast('An error occurred while saving the inventory adjustment.', 'error');}};
 
   const stats = useMemo(() => {
     const totalItems = products.reduce((sum, p) => sum + p.quantity, 0);
@@ -150,16 +126,14 @@ export default function InventoryPage({ currencySymbol }: InventoryPageProps) {
     return {
       totalItems,
       lowCount: lowStockItems.length,
-      outCount: outOfStockItems.length
-    };
-  }, [products]);
+      outCount: outOfStockItems.length};}, [products]);
 
   return (
     <div className="space-y-6">
       
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
+        
           <h2 className="text-lg font-bold text-slate-900 font-display">Inventory Control</h2>
           <p className="text-xs text-slate-500">Audit stock balances, record damage waste, and adjust wholesale deliveries</p>
         </div>
@@ -176,7 +150,7 @@ export default function InventoryPage({ currencySymbol }: InventoryPageProps) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         
         <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
-          <div>
+          
             <p className="text-[10px] font-semibold text-slate-500 tracking-wider uppercase font-display">Total Stock Pieces</p>
             <h3 className="text-2xl font-bold text-slate-900 font-mono mt-1">
               {stats.totalItems} <span className="text-xs text-slate-400 font-sans font-medium">units</span>
@@ -188,7 +162,7 @@ export default function InventoryPage({ currencySymbol }: InventoryPageProps) {
         </div>
 
         <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
-          <div>
+          
             <p className="text-[10px] font-semibold text-slate-500 tracking-wider uppercase font-display">Low Stock Alerts</p>
             <h3 className="text-2xl font-bold text-amber-600 font-mono mt-1">
               {stats.lowCount} <span className="text-xs text-slate-400 font-sans font-medium">products</span>
@@ -200,7 +174,7 @@ export default function InventoryPage({ currencySymbol }: InventoryPageProps) {
         </div>
 
         <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
-          <div>
+          
             <p className="text-[10px] font-semibold text-slate-500 tracking-wider uppercase font-display">Out of Stock</p>
             <h3 className="text-2xl font-bold text-rose-600 font-mono mt-1">
               {stats.outCount} <span className="text-xs text-slate-400 font-sans font-medium">products</span>
@@ -223,7 +197,7 @@ export default function InventoryPage({ currencySymbol }: InventoryPageProps) {
           </div>
           <div className="overflow-x-auto flex-1">
             <table className="w-full border-collapse text-left text-xs">
-              <thead>
+              
                 <tr className="bg-slate-50/50 border-b border-slate-150 text-slate-500 text-[10px] font-bold uppercase tracking-wider">
                   <th className="py-3 px-5">Product</th>
                   <th className="py-3 px-5">SKU</th>
@@ -245,20 +219,15 @@ export default function InventoryPage({ currencySymbol }: InventoryPageProps) {
                         {isOutOfStock ? (
                           <span className="inline-block text-[10px] font-bold bg-rose-50 text-rose-600 px-2.5 py-0.5 rounded">
                             Empty
-                          </span>
-                        ) : isLowStock ? (
+                          </span>) : isLowStock ? (
                           <span className="inline-block text-[10px] font-bold bg-amber-50 text-amber-700 px-2.5 py-0.5 rounded">
                             Low Stock
-                          </span>
-                        ) : (
+                          </span>) : (
                           <span className="inline-block text-[10px] font-bold bg-emerald-50 text-emerald-700 px-2.5 py-0.5 rounded font-mono">
                             Healthy
-                          </span>
-                        )}
+                          </span>)}
                       </td>
-                    </tr>
-                  );
-                })}
+                    </tr>);})}
               </tbody>
             </table>
           </div>
@@ -266,7 +235,7 @@ export default function InventoryPage({ currencySymbol }: InventoryPageProps) {
 
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col max-h-[500px]">
           <div className="p-5 border-b border-slate-100 flex items-center justify-between">
-            <div>
+            
               <h3 className="font-bold text-slate-900 font-display text-sm flex items-center gap-1.5">
                 <History className="w-4 h-4 text-slate-500" />
                 Inventory Logs
@@ -293,8 +262,7 @@ export default function InventoryPage({ currencySymbol }: InventoryPageProps) {
                 >
                   Adjust Stock Now
                 </button>
-              </div>
-            ) : (
+              </div>) : (
               logs.map((log) => {
                 const isAddition = log.quantity > 0;
                 
@@ -304,10 +272,8 @@ export default function InventoryPage({ currencySymbol }: InventoryPageProps) {
                       <div className="flex items-center gap-1.5">
                         <span className={`p-0.5 rounded ${isAddition ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
                           {isAddition ? (
-                            <ArrowUpRight className="w-3 h-3" />
-                          ) : (
-                            <ArrowDownRight className="w-3 h-3" />
-                          )}
+                            <ArrowUpRight className="w-3 h-3" />) : (
+                            <ArrowDownRight className="w-3 h-3" />)}
                         </span>
                         <h4 className="font-bold text-slate-900 truncate leading-snug">{log.productName}</h4>
                       </div>
@@ -323,10 +289,7 @@ export default function InventoryPage({ currencySymbol }: InventoryPageProps) {
                       </span>
                       <span className="text-[9px] text-slate-450 block font-mono uppercase">{log.type}</span>
                     </div>
-                  </div>
-                );
-              })
-            )}
+                  </div>);}))}
           </div>
         </div>
 
@@ -359,8 +322,7 @@ export default function InventoryPage({ currencySymbol }: InventoryPageProps) {
                 >
                   <option value="">-- Choose inventory item --</option>
                   {products.map(p => (
-                    <option key={p.id} value={p.id}>{p.name} (SKU: {p.sku}, Qty: {p.quantity})</option>
-                  ))}
+                    <option key={p.id} value={p.id}>{p.name} (SKU: {p.sku}, Qty: {p.quantity})</option>))}
                 </select>
               </div>
 
@@ -374,8 +336,7 @@ export default function InventoryPage({ currencySymbol }: InventoryPageProps) {
                     className={`py-2 rounded-lg text-xs font-bold border text-center transition-colors cursor-pointer ${
                       adjustmentType === 'IN'
                         ? 'border-indigo-600 bg-indigo-50 text-indigo-700'
-                        : 'border-slate-200 bg-white text-slate-650 hover:bg-slate-50'
-                    }`}
+                        : 'border-slate-200 bg-white text-slate-650 hover:bg-slate-50'}`}
                   >
                     IN
                   </button>
@@ -385,8 +346,7 @@ export default function InventoryPage({ currencySymbol }: InventoryPageProps) {
                     className={`py-2 rounded-lg text-xs font-bold border text-center transition-colors cursor-pointer ${
                       adjustmentType === 'OUT'
                         ? 'border-rose-600 bg-rose-50 text-rose-700'
-                        : 'border-slate-200 bg-white text-slate-650 hover:bg-slate-50'
-                    }`}
+                        : 'border-slate-200 bg-white text-slate-650 hover:bg-slate-50'}`}
                   >
                     OUT
                   </button>
@@ -396,8 +356,7 @@ export default function InventoryPage({ currencySymbol }: InventoryPageProps) {
                     className={`py-2 rounded-lg text-xs font-bold border text-center transition-colors cursor-pointer ${
                       adjustmentType === 'ADJUST'
                         ? 'border-slate-900 bg-slate-900 text-white'
-                        : 'border-slate-200 bg-white text-slate-650 hover:bg-slate-50'
-                    }`}
+                        : 'border-slate-200 bg-white text-slate-650 hover:bg-slate-50'}`}
                   >
                     ADJUST
                   </button>
@@ -453,9 +412,6 @@ export default function InventoryPage({ currencySymbol }: InventoryPageProps) {
             </form>
 
           </div>
-        </div>
-      )}
+        </div>)}
 
-    </div>
-  );
-}
+    </div>);}

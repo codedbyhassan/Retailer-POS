@@ -1,18 +1,10 @@
 import { useState, useCallback, useMemo } from 'react';
-import { Product, SaleItem } from '../types';
 
-export interface CartItem {
-  product: Product;
-  quantity: number;
-  price: number; // sellingPrice
-  subtotal: number;
-}
+export function useCart(taxRatePercent = 15) {
+  const [items, setItems] = useState([]);
+  const [discountPercent, setDiscountPercent] = useState(0);
 
-export function useCart(taxRatePercent: number = 15) {
-  const [items, setItems] = useState<CartItem[]>([]);
-  const [discountPercent, setDiscountPercent] = useState<number>(0);
-
-  const addItem = useCallback((product: Product) => {
+  const addItem = useCallback((product) => {
     if (product.quantity <= 0) {
       alert(`Warning: ${product.name} is currently out of stock. You can still add it if needed, but consider checking inventory.`);
     }
@@ -42,7 +34,7 @@ export function useCart(taxRatePercent: number = 15) {
     });
   }, []);
 
-  const updateQuantity = useCallback((productId: string, quantity: number) => {
+  const updateQuantity = useCallback((productId, quantity) => {
     if (quantity <= 0) {
       removeItem(productId);
       return;
@@ -61,7 +53,7 @@ export function useCart(taxRatePercent: number = 15) {
     );
   }, []);
 
-  const removeItem = useCallback((productId: string) => {
+  const removeItem = useCallback((productId) => {
     setItems((prevItems) => prevItems.filter((item) => item.product.id !== productId));
   }, []);
 
@@ -70,7 +62,7 @@ export function useCart(taxRatePercent: number = 15) {
     setDiscountPercent(0);
   }, []);
 
-  const applyDiscount = useCallback((percent: number) => {
+  const applyDiscount = useCallback((percent) => {
     const validPercent = Math.max(0, Math.min(100, percent));
     setDiscountPercent(validPercent);
   }, []);

@@ -1,14 +1,11 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { localDb } from '../services/indexeddb/db';
-import { Sale } from '../types';
-import { Search, Printer, Receipt, Eye, Landmark, Calendar, User, ArrowLeft, RefreshCw, X } from 'lucide-react';
+import React, { useState, useEffect, useMemo} from "react";
+import { localDb} from "../services/indexeddb/db";
+import { Sale} from "../types";
+import { Search, Printer, Receipt, Eye, Landmark, Calendar, User, ArrowLeft, RefreshCw, X} from "lucide-react";
 
-interface SalesHistoryPageProps {
-  currencySymbol: string;
-  taxRate: number;
-}
 
-export default function SalesHistoryPage({ currencySymbol, taxRate }: SalesHistoryPageProps) {
+
+export default function SalesHistoryPage({ currencySymbol, taxRate}: SalesHistoryPageProps) {
   const [sales, setSales] = useState<Sale[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -23,31 +20,23 @@ export default function SalesHistoryPage({ currencySymbol, taxRate }: SalesHisto
       setLoading(true);
       const list = await localDb.getSales();
       // Sort chronologically descending
-      setSales([...list].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
-    } catch (e) {
-      console.error('Failed to load transaction history:', e);
-    } finally {
-      setLoading(false);
-    }
-  };
+      setSales([...list].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));} catch (e) {
+      console.error('Failed to load transaction history:', e);} finally {
+      setLoading(false);}};
 
   useEffect(() => {
     fetchSales();
 
     const handleDbUpdated = () => {
-      fetchSales();
-    };
+      fetchSales();};
     window.addEventListener('retailer:db-updated', handleDbUpdated);
     return () => {
-      window.removeEventListener('retailer:db-updated', handleDbUpdated);
-    };
-  }, []);
+      window.removeEventListener('retailer:db-updated', handleDbUpdated);};}, []);
 
   // Compute cashiers list for filters
   const cashiers = useMemo(() => {
     const list = new Set(sales.map(s => s.cashierName).filter(Boolean));
-    return ['All', ...Array.from(list)];
-  }, [sales]);
+    return ['All', ...Array.from(list)];}, [sales]);
 
   // Filter list
   const filteredSales = useMemo(() => {
@@ -59,21 +48,17 @@ export default function SalesHistoryPage({ currencySymbol, taxRate }: SalesHisto
       let matchesDate = true;
       if (selectedDate) {
         const saleDateStr = s.createdAt.split('T')[0];
-        matchesDate = saleDateStr === selectedDate;
-      }
+        matchesDate = saleDateStr === selectedDate;}
 
-      return matchesSearch && matchesCashier && matchesDate;
-    });
-  }, [sales, searchQuery, selectedCashier, selectedDate]);
+      return matchesSearch && matchesCashier && matchesDate;});}, [sales, searchQuery, selectedCashier, selectedDate]);
 
   const handlePrint = () => {
-    window.print();
-  };
+    window.print();};
 
   return (
     <div className="space-y-6">
       
-      <div>
+      
         <h2 className="text-lg font-bold text-slate-900 font-display">Sales History</h2>
         <p className="text-xs text-slate-500">Search past checkout invoices, audit receipts, and inspect cashier sales logs</p>
       </div>
@@ -100,8 +85,7 @@ export default function SalesHistoryPage({ currencySymbol, taxRate }: SalesHisto
           >
             <option value="All">All Cashiers</option>
             {cashiers.filter(c => c !== 'All').map(c => (
-              <option key={c} value={c}>{c}</option>
-            ))}
+              <option key={c} value={c}>{c}</option>))}
           </select>
         </div>
 
@@ -120,8 +104,7 @@ export default function SalesHistoryPage({ currencySymbol, taxRate }: SalesHisto
       {loading ? (
         <div className="bg-white p-12 text-center rounded-xl border border-slate-200">
           <p className="text-xs font-semibold text-slate-400">Loading checkout history...</p>
-        </div>
-      ) : filteredSales.length === 0 ? (
+        </div>) : filteredSales.length === 0 ? (
         <div className="bg-white py-16 text-center border border-slate-200 rounded-xl shadow-sm flex flex-col items-center justify-center">
           <Receipt className="w-10 h-10 text-slate-300 stroke-1 mb-2" />
           <p className="text-sm font-bold text-slate-900 font-display">
@@ -134,18 +117,16 @@ export default function SalesHistoryPage({ currencySymbol, taxRate }: SalesHisto
           </p>
           {(searchQuery || selectedDate || selectedCashier !== 'All') && (
             <button 
-              onClick={() => { setSearchQuery(''); setSelectedCashier('All'); setSelectedDate(''); }}
+              onClick={() => { setSearchQuery(''); setSelectedCashier('All'); setSelectedDate('');}}
               className="mt-4 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold cursor-pointer transition-colors shadow-sm"
             >
               Reset All Filters
-            </button>
-          )}
-        </div>
-      ) : (
+            </button>)}
+        </div>) : (
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-left text-xs">
-              <thead>
+              
                 <tr className="bg-slate-50/50 border-b border-slate-150 text-slate-500 text-[10px] font-bold uppercase tracking-wider">
                   <th className="py-3 px-5">Invoice #</th>
                   <th className="py-3 px-5">Date & Time</th>
@@ -181,12 +162,10 @@ export default function SalesHistoryPage({ currencySymbol, taxRate }: SalesHisto
                         {isSynced ? (
                           <span className="inline-block text-[10px] font-bold bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded">
                             Synced
-                          </span>
-                        ) : (
+                          </span>) : (
                           <span className="inline-block text-[10px] font-bold bg-amber-50 text-amber-700 px-2 py-0.5 rounded animate-pulse">
                             Pending Cloud
-                          </span>
-                        )}
+                          </span>)}
                       </td>
                       <td className="py-3 px-5 text-right">
                         <button
@@ -194,17 +173,14 @@ export default function SalesHistoryPage({ currencySymbol, taxRate }: SalesHisto
                           className="px-2.5 py-1.5 text-slate-650 hover:text-indigo-600 hover:bg-slate-50 border border-slate-200 rounded-lg transition-colors inline-flex items-center gap-1 cursor-pointer font-bold"
                         >
                           <Eye className="w-3.5 h-3.5" />
-                          <span>Inspect</span>
+                          Inspect</span>
                         </button>
                       </td>
-                    </tr>
-                  );
-                })}
+                    </tr>);})}
               </tbody>
             </table>
           </div>
-        </div>
-      )}
+        </div>)}
 
       {/* DETAILED TRANSACTION INSPECT MODAL */}
       {activeSale && (
@@ -231,19 +207,19 @@ export default function SalesHistoryPage({ currencySymbol, taxRate }: SalesHisto
 
               <div className="space-y-1 text-[11px]">
                 <div className="flex justify-between">
-                  <span>INVOICE:</span>
+                  INVOICE:</span>
                   <span className="font-bold">{activeSale.invoiceNumber}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>CASHIER:</span>
-                  <span>{activeSale.cashierName}</span>
+                  CASHIER:</span>
+                  {activeSale.cashierName}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>DATE:</span>
-                  <span>{new Date(activeSale.createdAt).toLocaleString()}</span>
+                  DATE:</span>
+                  {new Date(activeSale.createdAt).toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>PAYMENT:</span>
+                  PAYMENT:</span>
                   <span className="font-bold">{activeSale.paymentMethod.replace('_', ' ')}</span>
                 </div>
               </div>
@@ -262,8 +238,7 @@ export default function SalesHistoryPage({ currencySymbol, taxRate }: SalesHisto
                     <span className="col-span-2 truncate font-sans text-slate-800">{item.productName}</span>
                     <span className="text-center font-mono">{item.quantity}</span>
                     <span className="text-right font-mono">{currencySymbol}{(item.price * item.quantity).toFixed(2)}</span>
-                  </div>
-                ))}
+                  </div>))}
               </div>
 
               <div className="border-t border-dashed border-slate-300" />
@@ -271,21 +246,20 @@ export default function SalesHistoryPage({ currencySymbol, taxRate }: SalesHisto
               {/* Totals */}
               <div className="space-y-1.5 text-[11px]">
                 <div className="flex justify-between">
-                  <span>Subtotal:</span>
+                  Subtotal:</span>
                   <span className="font-mono">{currencySymbol}{activeSale.subtotal.toFixed(2)}</span>
                 </div>
                 {activeSale.discountAmount > 0 && (
                   <div className="flex justify-between text-rose-600">
-                    <span>Discount:</span>
+                    Discount:</span>
                     <span className="font-mono">-{currencySymbol}{activeSale.discountAmount.toFixed(2)}</span>
-                  </div>
-                )}
+                  </div>)}
                 <div className="flex justify-between">
-                  <span>VAT ({taxRate}%):</span>
+                  VAT ({taxRate}%):</span>
                   <span className="font-mono">{currencySymbol}{activeSale.taxAmount.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-sm font-bold text-slate-900 pt-1.5 border-t border-dotted border-slate-200">
-                  <span>FINAL TOTAL:</span>
+                  FINAL TOTAL:</span>
                   <span className="font-mono">{currencySymbol}{activeSale.total.toFixed(2)}</span>
                 </div>
               </div>
@@ -293,7 +267,7 @@ export default function SalesHistoryPage({ currencySymbol, taxRate }: SalesHisto
               <div className="border-t border-dashed border-slate-300 my-4" />
 
               <div className="text-center text-[10px] text-slate-400">
-                <p>Record status: {activeSale.status.toUpperCase()}</p>
+                Record status: {activeSale.status.toUpperCase()}</p>
                 <p className="font-mono text-[9px] mt-1">UUID: {activeSale.id}</p>
               </div>
             </div>
@@ -316,9 +290,6 @@ export default function SalesHistoryPage({ currencySymbol, taxRate }: SalesHisto
             </div>
 
           </div>
-        </div>
-      )}
+        </div>)}
 
-    </div>
-  );
-}
+    </div>);}
