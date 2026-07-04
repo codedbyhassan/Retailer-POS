@@ -1,4 +1,5 @@
 import { localDb } from '../indexeddb/db.js';
+import { apiClient } from '../api.js';
 
 export class SyncEngine {
   private isSyncing = false;
@@ -7,7 +8,7 @@ export class SyncEngine {
     // Listen for online events to automatically trigger synchronization
     if (typeof window !== 'undefined') {
       window.addEventListener('online', () => {
-        console.log('[SyncEngine] Network connection restored. Auto-syncing...');
+        console.log('[v0] SyncEngine: Network connection restored. Auto-syncing...');
         this.sync();
       });
     }
@@ -23,8 +24,7 @@ export class SyncEngine {
       return { success: false, syncedCount: 0, error: 'No internet connection' };
     }
 
-    const token = localStorage.getItem('retailer_auth_token');
-    if (!token) {
+    if (!apiClient.isAuthenticated()) {
       return { success: false, syncedCount: 0, error: 'User is not logged in' };
     }
 
@@ -39,26 +39,21 @@ export class SyncEngine {
         return { success: true, syncedCount: 0 };
       }
 
-      console.log(`[SyncEngine] Syncing ${queue.length} offline operations with server...`);
+      console.log(`[v0] SyncEngine: Syncing ${queue.length} offline operations with server...`);
 
-      const response = await fetch('/api/sync', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ queue })
-      });
+      const response = await apiClient.syncData(queue);
 
-      if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.error || `Server returned ${response.status}`);
+      if (response.error) {
+        throw new Error(response.error);
       }
 
-      const result = await response.json();
-      console.log('[SyncEngine] Server processed sync queue successfully:', result);
+      if (!response.data) {
+        throw new Error('No data returned from server');
+      }
 
-      const { syncedIds, serverProducts, serverSettings, serverUsers, serverSales, serverInventoryLogs } = result;
+      console.log('[v0] SyncEngine: Server processed sync queue successfully:', response.data);
+
+      const { syncedIds, serverProducts, serverSettings, serverUsers, serverSales, serverInventoryLogs } = response.data;
 
       // 1. Remove successfully processed items from our local sync queue
       for (const id of syncedIds) {
@@ -106,11 +101,11 @@ export class SyncEngine {
       
       this.isSyncing = false;
       this.dispatchEvent('sync-complete', { syncedCount: syncedIds.length });
-      this.dispatchEvent('db-updated'); // Notify pages to refresh records from IndexedDB
+      this.dispatchEvent('db-updated');
 
       return { success: true, syncedCount: syncedIds.length };
     } catch (err: any) {
-      console.error('[SyncEngine] Sync failed:', err);
+      console.error('[v0] SyncEngine failed:', err);
       this.isSyncing = false;
       this.dispatchEvent('sync-error', { error: err.message });
       return { success: false, syncedCount: 0, error: err.message };
