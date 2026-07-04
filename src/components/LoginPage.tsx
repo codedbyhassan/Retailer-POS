@@ -30,16 +30,7 @@ export default function LoginPage({ onLogin, isOnline }: LoginPageProps) {
     }
   };
 
-  const prefillDemo = (role: 'admin' | 'cashier') => {
-    if (role === 'admin') {
-      setEmail('admin@retailer.com');
-      setPassword('admin123');
-    } else {
-      setEmail('cashier@retailer.com');
-      setPassword('cashier123');
-    }
-    setErrorMsg('');
-  };
+
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
@@ -129,29 +120,7 @@ export default function LoginPage({ onLogin, isOnline }: LoginPageProps) {
             </button>
           </form>
 
-          <div className="mt-8 pt-6 border-t border-slate-150/60">
-            <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest text-center mb-3">
-              Quick Fill Demo Accounts
-            </p>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                onClick={() => prefillDemo('admin')}
-                type="button"
-                className="py-2.5 px-3 border border-slate-100 bg-slate-50/50 rounded-2xl text-center hover:bg-slate-100 hover:border-slate-200 active:scale-95 transition-all cursor-pointer flex flex-col items-center justify-center"
-              >
-                <span className="block text-xs font-bold text-slate-900 font-display">Amina Admin</span>
-                <span className="block text-[9px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-full font-mono mt-1 border border-emerald-100/50">admin123</span>
-              </button>
-              <button
-                onClick={() => prefillDemo('cashier')}
-                type="button"
-                className="py-2.5 px-3 border border-slate-100 bg-slate-50/50 rounded-2xl text-center hover:bg-slate-100 hover:border-slate-200 active:scale-95 transition-all cursor-pointer flex flex-col items-center justify-center"
-              >
-                <span className="block text-xs font-bold text-slate-900 font-display">Kofi Cashier</span>
-                <span className="block text-[9px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-full font-mono mt-1 border border-emerald-100/50">cashier123</span>
-              </button>
-            </div>
-          </div>
+
         </div>
       </motion.div>
     </div>
