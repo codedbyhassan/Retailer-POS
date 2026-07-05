@@ -1,12 +1,9 @@
-import express from 'express';
-import { getProducts } from '../controllers/productController.js';
-import { authenticateToken, asyncHandler } from '../middleware/authMiddleware.js';
-import { validateProduct } from '../validators/productValidator.js';
+import { Router } from 'express';
+import { authMiddleware } from '../middleware/authMiddleware.js';
 
-const router = express.Router();
+const router = Router();
+router.use(authMiddleware);
 
-// All product routes require authentication
-router.get('/', authenticateToken, asyncHandler(getProducts));
-router.post('/', authenticateToken, validateProduct, asyncHandler(getProducts)); // Placeholder for creating products
-
+router.get('/', (_req, res) => res.json([]));
+router.post('/', (_req, res) => res.status(201).json({}));
 export default router;

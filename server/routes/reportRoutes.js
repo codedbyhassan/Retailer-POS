@@ -1,9 +1,7 @@
-import express from 'express';
-import { getReportSummary } from '../controllers/reportController.js';
-import { authenticateToken } from '../middleware/authMiddleware.js';
+import { Router } from 'express';
+import { authMiddleware } from '../middleware/authMiddleware.js';
 
-const router = express.Router();
-
-router.get('/', authenticateToken, getReportSummary);
-
+const router = Router();
+router.use(authMiddleware);
+router.get('/daily', (_req, res) => res.json({ revenue: 0, profit: 0, count: 0 }));
 export default router;

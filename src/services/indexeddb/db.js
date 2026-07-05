@@ -1,201 +1,126 @@
+import { openDB } from 'idb';
+import { generateId } from '../../utils/generateInvoiceNumber';
+
 const DB_NAME = 'retailer_db';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
-export class IndexedDBService {
-  constructor() {
-    this.db = null;
-    this.init();
-  }
-
-  init() {
-    if (this.db) return Promise.resolve(this.db);
-
-    return new Promise((resolve, reject) => {
-      const request = indexedDB.open(DB_NAME, DB_VERSION);
-
-      request.onerror = (event) => {
-        console.error('IndexedDB failed to open:', request.error);
-        reject(request.error);
-      };
-
-      request.onsuccess = (event) => {
-        this.db = request.result;
-        resolve(request.result);
-      };
-
-      request.onupgradeneeded = (event) => {
-        const db = request.result;
-        
-        // Create products store
-        if (!db.objectStoreNames.contains('products')) {
-          db.createObjectStore('products', { keyPath: 'id' });
-        }
-        
-        // Create sales store
-        if (!db.objectStoreNames.contains('sales')) {
-          db.createObjectStore('sales', { keyPath: 'id' });
-        }
-
-        // Create inventory logs store
-        if (!db.objectStoreNames.contains('inventory_logs')) {
-          db.createObjectStore('inventory_logs', { keyPath: 'id' });
-        }
-
-        // Create settings store
-        if (!db.objectStoreNames.contains('settings')) {
-          db.createObjectStore('settings', { keyPath: 'id' });
-        }
-
-        // Create sync queue store
-        if (!db.objectStoreNames.contains('sync_queue')) {
-          db.createObjectStore('sync_queue', { keyPath: 'id' });
-        }
-
-        // Create users store (for offline login caching)
-        if (!db.objectStoreNames.contains('users')) {
-          db.createObjectStore('users', { keyPath: 'id' });
-        }
-      };
-    });
-  }
-
-  async getStore(storeName, mode = 'readonly') {
-    const db = await this.init();
-    const transaction = db.transaction(storeName, mode);
-    return transaction.objectStore(storeName);
-  }
-
-  // Generic methods
-  async getAll(storeName) {
-    const store = await this.getStore(storeName);
-    return new Promise((resolve, reject) => {
-      const request = store.getAll();
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
-    });
-  }
-
-  async get(storeName, id) {
-    const store = await this.getStore(storeName);
-    return new Promise((resolve, reject) => {
-      const request = store.get(id);
-      request.onsuccess = () => resolve(request.result || null);
-      request.onerror = () => reject(request.error);
-    });
-  }
-
-  async put(storeName, data) {
-    const store = await this.getStore(storeName, 'readwrite');
-    return new Promise((resolve, reject) => {
-      const request = store.put(data);
-      request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
-    });
-  }
-
-  async delete(storeName, id) {
-    const store = await this.getStore(storeName, 'readwrite');
-    return new Promise((resolve, reject) => {
-      const request = store.delete(id);
-      request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
-    });
-  }
-
-  async clear(storeName) {
-    const store = await this.getStore(storeName, 'readwrite');
-    return new Promise((resolve, reject) => {
-      const request = store.clear();
-      request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
-    });
-  }
-
-  // Specialized Helper Methods
-  async getProducts() {
-    const products = await this.getAll('products');
-    // Return non-archived products
-    return products.filter(p => !p.archived);
-  }
-
-  async saveProduct(product) {
-    await this.put('products', product);
-  }
-
-  async getSales() {
-    return this.getAll('sales');
-  }
-
-  async saveSale(sale) {
-    await this.put('sales', sale);
-  }
-
-  async getInventoryLogs() {
-    return this.getAll('inventory_logs');
-  }
-
-  async saveInventoryLog(log) {
-    await this.put('inventory_logs', log);
-  }
-
-  async getSettings() {
-    const list = await this.getAll('settings');
-    const config = list.find(item => item.id === 'business_config');
-    return config ? config.data : null;
-  }
-
-  async saveSettings(settings) {
-    await this.put('settings', { id: 'business_config', data: settings });
-  }
-
-  async getUsers() {
-    return this.getAll('users');
-  }
-
-  async saveUser(user) {
-    await this.put('users', user);
-  }
-
-  async getSyncQueue() {
-    return this.getAll('sync_queue');
-  }
-
-  async addSyncQueueItem(item) {
-    const queueItem = {
-      ...item,
-      status: 'pending'
-    };
-    await this.put('sync_queue', queueItem);
-  }
-
-  async removeSyncQueueItem(id) {
-    await this.delete('sync_queue', id);
-  }
-
-  // Pre-seed mock data on first load if empty
-  async seedIfEmpty(defaultProducts, defaultSettings, defaultUsers) {
-    const existingProds = await this.getProducts();
-    if (existingProds.length === 0) {
-      console.log('[IndexedDB] Pre-seeding default products...');
-      for (const p of defaultProducts) {
-        await this.saveProduct(p);
+export async function getDB() {
+  return openDB(DB_NAME, DB_VERSION, {
+    upgrade(db) {
+      if (!db.objectStoreNames.contains('products')) {
+        const products = db.createObjectStore('products', { keyPath: 'id' });
+        products.createIndex('sku', 'sku', { unique: false });
+        products.createIndex('barcode', 'barcode', { unique: false });
+        products.createIndex('archived', 'archived', { unique: false });
       }
-    }
 
-    const existingSettings = await this.getSettings();
-    if (!existingSettings) {
-      console.log('[IndexedDB] Pre-seeding default settings...');
-      await this.saveSettings(defaultSettings);
-    }
-
-    const existingUsers = await this.getUsers();
-    if (existingUsers.length === 0) {
-      console.log('[IndexedDB] Pre-seeding default users...');
-      for (const u of defaultUsers) {
-        await this.saveUser(u);
+      if (!db.objectStoreNames.contains('product_images')) {
+        const images = db.createObjectStore('product_images', { keyPath: 'id' });
+        images.createIndex('product_id', 'product_id', { unique: false });
+        images.createIndex('created_at', 'created_at', { unique: false });
       }
-    }
-  }
+
+      if (!db.objectStoreNames.contains('sales')) {
+        const sales = db.createObjectStore('sales', { keyPath: 'id' });
+        sales.createIndex('invoice_number', 'invoice_number', { unique: true });
+        sales.createIndex('cashier_id', 'cashier_id', { unique: false });
+        sales.createIndex('created_at', 'created_at', { unique: false });
+      }
+
+      if (!db.objectStoreNames.contains('sale_items')) {
+        const items = db.createObjectStore('sale_items', { keyPath: 'id' });
+        items.createIndex('sale_id', 'sale_id', { unique: false });
+        items.createIndex('product_id', 'product_id', { unique: false });
+      }
+
+      if (!db.objectStoreNames.contains('inventory_logs')) {
+        const logs = db.createObjectStore('inventory_logs', { keyPath: 'id' });
+        logs.createIndex('product_id', 'product_id', { unique: false });
+        logs.createIndex('created_at', 'created_at', { unique: false });
+      }
+
+      if (!db.objectStoreNames.contains('customers')) {
+        db.createObjectStore('customers', { keyPath: 'id' });
+      }
+
+      if (!db.objectStoreNames.contains('users')) {
+        const users = db.createObjectStore('users', { keyPath: 'id' });
+        users.createIndex('email', 'email', { unique: true });
+      }
+
+      if (!db.objectStoreNames.contains('sync_queue')) {
+        const queue = db.createObjectStore('sync_queue', { keyPath: 'id' });
+        queue.createIndex('status', 'status', { unique: false });
+        queue.createIndex('createdAt', 'createdAt', { unique: false });
+      }
+
+      if (!db.objectStoreNames.contains('settings')) {
+        db.createObjectStore('settings', { keyPath: 'key' });
+      }
+    },
+  });
 }
 
-export const localDb = new IndexedDBService();
+export async function seedDatabase() {
+  const db = await getDB();
+  const userCount = await db.count('users');
+  if (userCount > 0) return;
+
+  const defaultUsers = [
+    {
+      id: generateId('user'),
+      name: 'Admin User',
+      email: 'admin@retailer.com',
+      password: 'admin123',
+      role: 'admin',
+      active: true,
+      created_at: new Date().toISOString(),
+    },
+    {
+      id: generateId('user'),
+      name: 'Cashier User',
+      email: 'cashier@retailer.com',
+      password: 'cashier123',
+      role: 'cashier',
+      active: true,
+      created_at: new Date().toISOString(),
+    },
+  ];
+
+  const tx = db.transaction(['users', 'settings', 'products'], 'readwrite');
+
+  for (const user of defaultUsers) {
+    await tx.objectStore('users').add(user);
+  }
+
+  await tx.objectStore('settings').put({
+    key: 'business',
+    value: {
+      business_name: 'My Retail Shop',
+      currency: 'USD',
+      tax_rate: 10,
+      receipt_footer: 'Thank you for shopping with us!',
+      low_stock_threshold: 10,
+      preset: 'classic-blue',
+    },
+  });
+
+  const sampleProducts = [
+    { name: 'Rice 5kg', sku: 'RICE-5KG', barcode: '8901234567890', category: 'Groceries', cost_price: 8, selling_price: 12, quantity: 50, reorder_level: 10 },
+    { name: 'Cooking Oil 1L', sku: 'OIL-1L', barcode: '8901234567891', category: 'Groceries', cost_price: 3.5, selling_price: 5.5, quantity: 30, reorder_level: 8 },
+    { name: 'Soft Drink 500ml', sku: 'DRINK-500', barcode: '8901234567892', category: 'Beverages', cost_price: 0.8, selling_price: 1.5, quantity: 100, reorder_level: 20 },
+    { name: 'Bread Loaf', sku: 'BREAD-01', barcode: '8901234567893', category: 'Bakery', cost_price: 1.2, selling_price: 2, quantity: 25, reorder_level: 5 },
+    { name: 'Soap Bar', sku: 'SOAP-01', barcode: '8901234567894', category: 'Personal Care', cost_price: 0.5, selling_price: 1, quantity: 5, reorder_level: 10 },
+  ];
+
+  for (const p of sampleProducts) {
+    await tx.objectStore('products').add({
+      id: generateId('prod'),
+      ...p,
+      archived: false,
+      created_at: new Date().toISOString(),
+    });
+  }
+
+  await tx.done;
+}

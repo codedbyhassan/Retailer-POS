@@ -1,97 +1,68 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback } from 'react';
 
-export function useCart(taxRatePercent = 15) {
+export function useCart() {
   const [items, setItems] = useState([]);
-  const [discountPercent, setDiscountPercent] = useState(0);
+  const [discount, setDiscount] = useState(0);
 
   const addItem = useCallback((product) => {
-    if (product.quantity <= 0) {
-      alert(`Warning: ${product.name} is currently out of stock. You can still add it if needed, but consider checking inventory.`);
-    }
-
-    setItems((prevItems) => {
-      const existing = prevItems.find((item) => item.product.id === product.id);
+    setItems((prev) => {
+      const existing = prev.find((i) => i.product_id === product.id);
       if (existing) {
-        return prevItems.map((item) =>
-          item.product.id === product.id
-            ? {
-                ...item,
-                quantity: item.quantity + 1,
-                subtotal: (item.quantity + 1) * item.price,
-              }
-            : item
+        if (existing.quantity >= product.quantity) return prev;
+        return prev.map((i) =>
+          i.product_id === product.id ? { ...i, quantity: i.quantity + 1 } : i
         );
       }
       return [
-        ...prevItems,
+        ...prev,
         {
-          product,
+          product_id: product.id,
+          name: product.name,
+          price: product.selling_price,
+          cost_price: product.cost_price,
+          max_quantity: product.quantity,
           quantity: 1,
-          price: product.sellingPrice,
-          subtotal: product.sellingPrice,
         },
       ];
     });
   }, []);
 
-  const updateQuantity = useCallback((productId, quantity) => {
-    if (quantity <= 0) {
-      removeItem(productId);
-      return;
-    }
-
-    setItems((prevItems) =>
-      prevItems.map((item) =>
-        item.product.id === productId
-          ? {
-              ...item,
-              quantity,
-              subtotal: quantity * item.price,
-            }
-          : item
-      )
-    );
+  const removeItem = useCallback((productId) => {
+    setItems((prev) => prev.filter((i) => i.product_id !== productId));
   }, []);
 
-  const removeItem = useCallback((productId) => {
-    setItems((prevItems) => prevItems.filter((item) => item.product.id !== productId));
+  const updateQuantity = useCallback((productId, quantity) => {
+    setItems((prev) =>
+      prev
+        .map((i) => {
+          if (i.product_id !== productId) return i;
+          const q = Math.max(1, Math.min(quantity, i.max_quantity));
+          return { ...i, quantity: q };
+        })
+        .filter((i) => i.quantity > 0)
+    );
   }, []);
 
   const clearCart = useCallback(() => {
     setItems([]);
-    setDiscountPercent(0);
+    setDiscount(0);
   }, []);
 
-  const applyDiscount = useCallback((percent) => {
-    const validPercent = Math.max(0, Math.min(100, percent));
-    setDiscountPercent(validPercent);
-  }, []);
-
-  const totals = useMemo(() => {
-    const subtotal = items.reduce((sum, item) => sum + item.subtotal, 0);
-    const discountAmount = Number(((subtotal * discountPercent) / 100).toFixed(2));
-    const subtotalAfterDiscount = subtotal - discountAmount;
-    
-    // Calculate tax based on the discounted amount
-    const taxAmount = Number(((subtotalAfterDiscount * taxRatePercent) / 100).toFixed(2));
-    const total = Number((subtotalAfterDiscount + taxAmount).toFixed(2));
-
-    return {
-      subtotal,
-      discountAmount,
-      taxAmount,
-      total,
-      discountPercent,
-    };
-  }, [items, discountPercent, taxRatePercent]);
+  const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+  const discountAmount = subtotal * (discount / 100);
+  const afterDiscount = subtotal - discountAmount;
 
   return {
     items,
+    discount,
+    setDiscount,
     addItem,
-    updateQuantity,
     removeItem,
+    updateQuantity,
     clearCart,
-    applyDiscount,
-    totals,
+    subtotal,
+    discountAmount,
+    afterDiscount,
+    itemCount: items.reduce((sum, i) => sum + i.quantity, 0),
   };
 }

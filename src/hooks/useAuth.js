@@ -1,124 +1,56 @@
 import { useState, useEffect, useCallback } from 'react';
-import { localDb } from '../services/indexeddb/db.js';
-import { apiClient } from '../services/api.js';
+import { getDB, seedDatabase } from '../services/indexeddb/db';
+import { ROLES } from '../constants/roles';
+
+const SESSION_KEY = 'retailer_session';
+
+function getStoredSession() {
+  try {
+    const raw = localStorage.getItem(SESSION_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
 
 export function useAuth() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(getStoredSession);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  const fetchCurrentUser = useCallback(async () => {
-    const hasToken = apiClient.isAuthenticated();
-    if (!hasToken) {
-      setUser(null);
-      setLoading(false);
-      return;
-    }
-
-    try {
-      // Try to fetch from server if online
-      if (navigator.onLine) {
-        const response = await apiClient.getCurrentUser();
-        if (response.data) {
-          setUser(response.data.user);
-          await localDb.saveUser(response.data.user);
-          setLoading(false);
-          return;
-        }
-      }
-
-      // Fall back to cached user
-      const accessToken = localStorage.getItem('accessToken');
-      if (accessToken) {
-        const users = await localDb.getUsers();
-        if (users.length > 0) {
-          setUser(users[0]);
-          setLoading(false);
-          return;
-        }
-      }
-
-      setUser(null);
-    } catch (e) {
-      console.error('[v0] Error verifying auth session:', e);
-      const users = await localDb.getUsers();
-      if (users.length > 0) {
-        setUser(users[0]);
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, []);
 
   useEffect(() => {
-    fetchCurrentUser();
-  }, [fetchCurrentUser]);
-
-  const login = async (email, password) => {
-    setError(null);
-    setLoading(true);
-
-    try {
-      if (navigator.onLine) {
-        const response = await apiClient.login(email, password);
-        if (response.data) {
-          setUser(response.data.user);
-          await localDb.saveUser(response.data.user);
-          setLoading(false);
-          return { success: true };
-        } else {
-          setLoading(false);
-          const errorMsg = response.error || 'Login failed';
-          setError(errorMsg);
-          return { success: false, error: errorMsg };
-        }
-      } else {
-        // Offline login - check local cache
-        const localUsers = await localDb.getUsers();
-        const matchingUser = localUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
-        
-        if (matchingUser) {
-          setUser(matchingUser);
-          apiClient.setAccessToken(`offline_${matchingUser.id}`);
-          setLoading(false);
-          return { success: true };
-        }
-
-        setLoading(false);
-        const errorMsg = 'You are offline and this account is not cached';
-        setError(errorMsg);
-        return { success: false, error: errorMsg };
-      }
-    } catch (e) {
-      setLoading(false);
-      const errorMsg = e.message || 'An error occurred during login';
-      setError(errorMsg);
-      return { success: false, error: errorMsg };
-    }
-  };
-
-  const logout = useCallback(async () => {
-    try {
-      await apiClient.logout();
-    } catch (e) {
-      console.error('[v0] Logout error:', e);
-    } finally {
-      setUser(null);
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      if (typeof window !== 'undefined') {
-        window.location.reload();
-      }
-    }
+    seedDatabase().finally(() => setLoading(false));
   }, []);
 
-  return {
-    user,
-    isLoggedIn: !!user,
-    loading,
-    error,
-    login,
-    logout,
-    refreshUser: fetchCurrentUser
-  };
+  const login = useCallback(async (email, password) => {
+    const db = await getDB();
+    const users = await db.getAllFromIndex('users', 'email', email.toLowerCase());
+    const found = users.find((u) => u.email === email.toLowerCase() && u.active);
+
+    if (!found || found.password !== password) {
+      throw new Error('Invalid email or password');
+    }
+
+    const session = {
+      id: found.id,
+      name: found.name,
+      email: found.email,
+      role: found.role,
+    };
+
+    localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+    localStorage.setItem('retailer_token', `local_${found.id}`);
+    setUser(session);
+    return session;
+  }, []);
+
+  const logout = useCallback(() => {
+    localStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem('retailer_token');
+    setUser(null);
+  }, []);
+
+  const isAdmin = user?.role === ROLES.ADMIN;
+  const isCashier = user?.role === ROLES.CASHIER;
+
+  return { user, loading, login, logout, isAdmin, isCashier, isAuthenticated: !!user };
 }

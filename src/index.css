@@ -1,102 +1,131 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Sora:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-@theme {
-  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Plus Jakarta Sans", sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+@layer base {
+  :root,
+  [data-preset='classic-blue'] {
+    --brand-50: 239 246 255;
+    --brand-100: 219 234 254;
+    --brand-200: 191 219 254;
+    --brand-300: 147 197 253;
+    --brand-400: 96 165 250;
+    --brand-500: 59 130 246;
+    --brand-600: 37 99 235;
+    --brand-700: 29 78 216;
+    --brand-800: 30 64 175;
+    --brand-900: 30 58 138;
+    --brand-950: 23 37 84;
+  }
 
-  /* Custom Warm Charcoal / Carbon Onyx neutrals */
-  --color-slate-50: #faf9f6;
-  --color-slate-100: #f1efea;
-  --color-slate-200: #e3e1d9;
-  --color-slate-300: #cac7bc;
-  --color-slate-400: #a7a499;
-  --color-slate-500: #827f75;
-  --color-slate-600: #646158;
-  --color-slate-700: #4c4a43;
-  --color-slate-800: #33322e;
-  --color-slate-900: #1c1b1a;
-  --color-slate-950: #0f0e0e;
+  [data-preset='emerald-market'] {
+    --brand-50: 236 253 245;
+    --brand-100: 209 250 229;
+    --brand-200: 167 243 208;
+    --brand-300: 110 231 183;
+    --brand-400: 52 211 153;
+    --brand-500: 16 185 129;
+    --brand-600: 5 150 105;
+    --brand-700: 4 120 87;
+    --brand-800: 6 95 70;
+    --brand-900: 6 78 59;
+    --brand-950: 2 44 34;
+  }
 
-  --color-gray-50: #faf9f6;
-  --color-gray-100: #f1efea;
-  --color-gray-200: #e3e1d9;
-  --color-gray-300: #cac7bc;
-  --color-gray-400: #a7a499;
-  --color-gray-500: #827f75;
-  --color-gray-600: #646158;
-  --color-gray-700: #4c4a43;
-  --color-gray-800: #33322e;
-  --color-gray-900: #1c1b1a;
-  --color-gray-950: #0f0e0e;
+  [data-preset='ruby-retail'] {
+    --brand-50: 255 241 242;
+    --brand-100: 255 228 230;
+    --brand-200: 254 205 211;
+    --brand-300: 253 164 175;
+    --brand-400: 251 113 133;
+    --brand-500: 244 63 94;
+    --brand-600: 225 29 72;
+    --brand-700: 190 18 60;
+    --brand-800: 159 18 57;
+    --brand-900: 136 19 55;
+    --brand-950: 76 5 25;
+  }
 
-  /* Custom Bespoke Cobalt brand colors */
-  --color-indigo-50: #f0f3ff;
-  --color-indigo-100: #e0e7ff;
-  --color-indigo-200: #c7d2fe;
-  --color-indigo-300: #a5b4fc;
-  --color-indigo-400: #818cf8;
-  --color-indigo-500: #6366f1;
-  --color-indigo-600: #2d43be;
-  --color-indigo-700: #2132a0;
-  --color-indigo-800: #1a277d;
-  --color-indigo-900: #131d5b;
-  --color-indigo-950: #090e2d;
+  [data-preset='gold-ledger'] {
+    --brand-50: 255 251 235;
+    --brand-100: 254 243 199;
+    --brand-200: 253 230 138;
+    --brand-300: 252 211 77;
+    --brand-400: 251 191 36;
+    --brand-500: 245 158 11;
+    --brand-600: 217 119 6;
+    --brand-700: 180 83 9;
+    --brand-800: 146 64 14;
+    --brand-900: 120 53 15;
+    --brand-950: 69 26 3;
+  }
 
-  /* Custom Forest Emerald success colors */
-  --color-emerald-50: #ecfdf5;
-  --color-emerald-600: #107b5e;
-  --color-emerald-700: #0c624b;
+  [data-preset='violet-studio'] {
+    --brand-50: 245 243 255;
+    --brand-100: 237 233 254;
+    --brand-200: 221 214 254;
+    --brand-300: 196 181 253;
+    --brand-400: 167 139 250;
+    --brand-500: 139 92 246;
+    --brand-600: 124 58 237;
+    --brand-700: 109 40 217;
+    --brand-800: 91 33 182;
+    --brand-900: 76 29 149;
+    --brand-950: 46 16 101;
+  }
 
-  /* Custom Bronze Ochre warning colors */
-  --color-amber-50: #fffdf5;
-  --color-amber-600: #ad6200;
-  --color-amber-700: #8c4f00;
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
 
-  /* Custom Crimson Rose danger colors */
-  --color-rose-50: #fff5f5;
-  --color-rose-600: #c92a2a;
-  --color-rose-700: #b02121;
+  body {
+    @apply bg-surface-secondary font-sans text-gray-900 dark:bg-black dark:text-gray-100;
+  }
+
+  h2 {
+    @apply font-heading text-2xl font-semibold tracking-tight text-gray-900 dark:text-white;
+  }
+
+  h3 {
+    @apply font-heading text-xl font-semibold tracking-tight text-gray-900 dark:text-white;
+  }
 }
 
-.font-display {
-  font-family: var(--font-display);
+@layer components {
+  .glass-nav {
+    @apply border-b border-black/[0.06] bg-white/80 backdrop-blur-ios backdrop-saturate-150 dark:border-white/[0.08] dark:bg-surface-dark/80;
+  }
+
+  .ios-card {
+    @apply rounded-3xl border border-black/[0.04] bg-white shadow-ios dark:border-white/[0.06] dark:bg-surface-dark dark:shadow-none;
+  }
+
+  .ios-pill {
+    @apply rounded-full px-3.5 py-1.5 text-xs font-medium transition-all duration-200 ease-ios;
+  }
+
+  .ios-menu-item {
+    @apply flex w-full items-center gap-3 rounded-2xl px-3.5 py-2.5 text-sm font-medium text-gray-700 transition-all duration-150 ease-ios hover:bg-black/[0.04] active:scale-[0.98] dark:text-gray-200 dark:hover:bg-white/[0.06];
+  }
 }
 
-h3 {
-  font-family: "Plus Jakarta Sans", sans-serif;
-}
-
-body {
-  font-family: var(--font-sans);
-  background-color: var(--color-slate-50);
-  color: var(--color-slate-900);
-}
-
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: var(--color-slate-200);
-  border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: var(--color-slate-300);
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+  }
 }
 
 @media print {
   body * {
     visibility: hidden;
   }
-  #printable-receipt, #printable-receipt * {
+  .receipt-print,
+  .receipt-print * {
     visibility: visible;
   }
-  #printable-receipt {
+  .receipt-print {
     position: absolute;
     left: 0;
     top: 0;

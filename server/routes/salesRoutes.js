@@ -1,11 +1,7 @@
-import express from 'express';
-import { getSales, createSale } from '../controllers/salesController.js';
-import { authenticateToken } from '../middleware/authMiddleware.js';
-import { validateSale } from '../validators/saleValidator.js';
+import { Router } from 'express';
+import { authMiddleware } from '../middleware/authMiddleware.js';
 
-const router = express.Router();
-
-router.get('/', authenticateToken, getSales);
-router.post('/', authenticateToken, validateSale, createSale);
-
+const router = Router();
+router.use(authMiddleware);
+router.get('/', (_req, res) => res.json([]));
 export default router;

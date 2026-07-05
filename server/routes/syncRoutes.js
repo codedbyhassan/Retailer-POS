@@ -1,9 +1,7 @@
-import express from 'express';
-import { syncQueue } from '../controllers/syncController.js';
-import { authenticateToken } from '../middleware/authMiddleware.js';
+import { Router } from 'express';
+import { handleSync } from '../controllers/syncController.js';
+import { authMiddleware } from '../middleware/authMiddleware.js';
 
-const router = express.Router();
-
-router.post('/', authenticateToken, syncQueue);
-
+const router = Router();
+router.post('/', authMiddleware, handleSync);
 export default router;
