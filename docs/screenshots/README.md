@@ -9,7 +9,7 @@ Retailer-POS is a modern, offline-first Point of Sale and Inventory Management s
 ## Screenshots
 
 ### 1. Login Screen
-![Login Screen](01-dashboard.png)
+<img src="01-dashboard.png" alt="Login Screen" width="100%"/>
 
 **Features:**
 - Clean, modern authentication interface
@@ -24,7 +24,7 @@ Retailer-POS is a modern, offline-first Point of Sale and Inventory Management s
 ---
 
 ### 2. Admin Dashboard
-![Admin Dashboard](02-admin-dashboard.png)
+<img src="02-admin-dashboard.png" alt="Admin Dashboard" width="100%"/>
 
 **Key Features:**
 - **Real-time Sales Metrics:**
@@ -50,7 +50,7 @@ Retailer-POS is a modern, offline-first Point of Sale and Inventory Management s
 ---
 
 ### 3. Point of Sale (POS) Terminal
-![POS Page](03-pos-page.png)
+<img src="03-pos-page.png" alt="POS Page" width="100%"/>
 
 **Barcode Scanning & Product Search:**
 - Search products by name or scan barcode
@@ -79,7 +79,7 @@ Retailer-POS is a modern, offline-first Point of Sale and Inventory Management s
 ---
 
 ### 4. Inventory Management
-![Inventory Page](04-inventory.png)
+<img src="04-inventory.png" alt="Inventory Management" width="100%"/>
 
 **Stock Overview:**
 - Total product count
@@ -104,7 +104,7 @@ Retailer-POS is a modern, offline-first Point of Sale and Inventory Management s
 ---
 
 ### 5. Product Catalog Management
-![Products Page](05-products.png)
+<img src="05-products.png" alt="Product Catalog Management" width="100%"/>
 
 **Product Administration:**
 - Complete product database with search
@@ -132,7 +132,7 @@ Retailer-POS is a modern, offline-first Point of Sale and Inventory Management s
 ---
 
 ### 6. Sales History
-![Sales Page](06-sales.png)
+<img src="06-sales.png" alt="Sales History" width="100%"/>
 
 **Sales Records:**
 - Date range filtering (From/To)
@@ -150,7 +150,7 @@ Retailer-POS is a modern, offline-first Point of Sale and Inventory Management s
 ---
 
 ### 7. Reports & Analytics
-![Reports Page](07-reports.png)
+<img src="07-reports.png" alt="Reports & Analytics" width="100%"/>
 
 **Report Tabs:**
 - **Overview:** Dashboard-style summary metrics
