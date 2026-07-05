@@ -167,6 +167,7 @@ Complete guides for setup, configuration, and usage:
 
 | Document | Purpose |
 | --- | --- |
+| [**Screenshots**](docs/screenshots/README.md) | Visual tour of all app pages with feature descriptions |
 | [**SUPABASE_SETUP.md**](docs/SUPABASE_SETUP.md) | Cloud backend configuration, SQL schema, sync conflict resolution, and troubleshooting |
 | [**ADMIN_FEATURES.md**](docs/ADMIN_FEATURES.md) | Complete admin reference: dashboard, inventory, sales, users, reports, security, and best practices |
 | [**RATE_LIMITING.md**](docs/RATE_LIMITING.md) | API rate limit policies, retry strategies, caching, and optimization |
