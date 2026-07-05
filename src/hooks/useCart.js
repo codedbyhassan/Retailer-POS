@@ -1,8 +1,17 @@
 import { useState, useCallback } from 'react';
 
+// Generate idempotency key for transaction deduplication
+function generateIdempotencyKey(items, total) {
+  const itemsStr = items.map(i => `${i.product_id}:${i.quantity}`).join('|');
+  const key = `${itemsStr}:${total.toFixed(2)}:${Date.now()}`;
+  // Simple hash for transaction fingerprint
+  return btoa(key).substring(0, 32);
+}
+
 export function useCart() {
   const [items, setItems] = useState([]);
   const [discount, setDiscount] = useState(0);
+  const [lastIdempotencyKey, setLastIdempotencyKey] = useState(null);
 
   const addItem = useCallback((product) => {
     setItems((prev) => {
@@ -52,6 +61,12 @@ export function useCart() {
   const discountAmount = subtotal * (discount / 100);
   const afterDiscount = subtotal - discountAmount;
 
+  const generateTransactionKey = useCallback(() => {
+    const key = generateIdempotencyKey(items, afterDiscount);
+    setLastIdempotencyKey(key);
+    return key;
+  }, [items, afterDiscount]);
+
   return {
     items,
     discount,
@@ -64,5 +79,7 @@ export function useCart() {
     discountAmount,
     afterDiscount,
     itemCount: items.reduce((sum, i) => sum + i.quantity, 0),
+    lastIdempotencyKey,
+    generateTransactionKey,
   };
 }

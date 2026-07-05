@@ -10,6 +10,7 @@ import Button from '../../components/ui/Button';
 import ProductCard, { ProductCardGrid } from '../../components/products/ProductCard';
 import { useBusinessSettings } from '../../hooks/useBusinessSettings';
 import { useToast } from '../../components/ui/Toast';
+import { barcodeLookup } from '../../services/api/barcodeLookup';
 
 export default function POSPage() {
   const { user } = useAuth();
@@ -20,6 +21,7 @@ export default function POSPage() {
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [receipt, setReceipt] = useState(null);
   const [checkingOut, setCheckingOut] = useState(false);
+  const [lookingUpBarcode, setLookingUpBarcode] = useState(false);
   const searchRef = useRef(null);
   const toast = useToast();
 
@@ -34,23 +36,49 @@ export default function POSPage() {
   const taxAmount = cart.afterDiscount * (taxRate / 100);
   const total = cart.afterDiscount + taxAmount;
 
-  const handleBarcodeScan = (e) => {
-    if (e.key === 'Enter' && query.trim()) {
-      const match = products.find((p) => p.barcode === query.trim());
-      if (match && match.quantity > 0) {
-        cart.addItem(match);
-        setQuery('');
-        toast.success(`Added ${match.name}`);
+  const handleBarcodeSearch = async () => {
+    if (!query.trim()) return;
+    
+    // First try local search
+    const localMatch = products.find((p) => p.barcode === query.trim());
+    if (localMatch && localMatch.quantity > 0) {
+      cart.addItem(localMatch);
+      setQuery('');
+      toast.success(`Added ${localMatch.name}`);
+      return;
+    }
+
+    // If not found locally, try API lookup
+    if (products.length > 0) {
+      setLookingUpBarcode(true);
+      try {
+        const result = await barcodeLookup.lookup(query.trim());
+        if (result.found) {
+          toast.info(`Product not in inventory: ${result.name}`);
+        } else {
+          toast.warning('Barcode not found in database');
+        }
+      } catch (err) {
+        toast.error(err.message);
+      } finally {
+        setLookingUpBarcode(false);
       }
     }
   };
 
+  const handleBarcodeScan = (e) => {
+    if (e.key === 'Enter' && query.trim()) {
+      handleBarcodeSearch();
+    }
+  };
+
   const handleCheckout = async () => {
-    if (!cart.items.length) return;
+    if (!cart.items.length || checkingOut) return;
     setCheckingOut(true);
     try {
       const invoiceNumber = generateInvoiceNumber();
       const saleId = generateId('sale');
+      const idempotencyKey = cart.generateTransactionKey();
 
       const sale = {
         id: saleId,
@@ -78,7 +106,7 @@ export default function POSPage() {
       }));
 
       await createSale({ sale, items });
-      await addToSyncQueue('CREATE_SALE', { sale, items });
+      await addToSyncQueue('CREATE_SALE', { sale, items, idempotencyKey });
 
       setReceipt({ sale, items });
       cart.clearCart();

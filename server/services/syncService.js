@@ -3,12 +3,51 @@ import { logger } from '../utils/logger.js';
 
 const memoryStore = { products: [], sales: [], inventory_logs: [] };
 
+// Deduplication store: tracks recent transactions within 10-second window
+// Format: { idempotencyKey: { timestamp, processed: boolean } }
+const deduplicationStore = new Map();
+const DEDUP_WINDOW_MS = 10_000;
+
+// Cleanup old deduplication entries every minute
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, data] of deduplicationStore.entries()) {
+    if (now - data.timestamp > DEDUP_WINDOW_MS) {
+      deduplicationStore.delete(key);
+    }
+  }
+}, 60_000);
+
+export function isDuplicateTransaction(idempotencyKey) {
+  if (!idempotencyKey) return false;
+  return deduplicationStore.has(idempotencyKey);
+}
+
+export function markTransactionProcessed(idempotencyKey) {
+  if (idempotencyKey) {
+    deduplicationStore.set(idempotencyKey, {
+      timestamp: Date.now(),
+      processed: true,
+    });
+  }
+}
+
 export async function applySyncAction(item) {
-  const { action, payload } = item;
+  const { action, payload, idempotencyKey } = item;
   logger('info', 'Applying sync action', { action, id: item.id });
 
+  // Check for duplicate transactions
+  if (action === 'CREATE_SALE' && isDuplicateTransaction(idempotencyKey)) {
+    logger('warn', 'Duplicate transaction detected', { idempotencyKey });
+    return { ok: true, isDuplicate: true };
+  }
+
   if (!isSupabaseConfigured()) {
-    return applyToMemory(action, payload);
+    const result = applyToMemory(action, payload);
+    if (action === 'CREATE_SALE') {
+      markTransactionProcessed(idempotencyKey);
+    }
+    return result;
   }
 
   switch (action) {
@@ -23,6 +62,7 @@ export async function applySyncAction(item) {
       if (payload.items?.length) {
         await supabase.from('sale_items').upsert(payload.items.map(mapSaleItem));
       }
+      markTransactionProcessed(idempotencyKey);
       return { ok: true };
     case 'INVENTORY_ADJUST':
       return supabase.from('inventory_logs').upsert(mapInventoryLog(payload));

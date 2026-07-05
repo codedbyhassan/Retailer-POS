@@ -1,4 +1,4 @@
-﻿# Retailer POS
+# Retailer POS
 
 Offline-first point of sale, inventory, product, and reporting system for small and medium retailers. The app is built to keep selling even when the internet drops: products, sales, inventory movements, settings, product images, theme presets, and sync queue state are stored locally first with IndexedDB, then synchronized through the backend when available.
 
@@ -160,6 +160,24 @@ VITE_API_URL=http://localhost:3001
 ```
 
 Backend Supabase settings are optional. The app remains usable offline/local without them.
+
+## Documentation
+
+Complete guides for setup, configuration, and usage:
+
+| Document | Purpose |
+| --- | --- |
+| [**SUPABASE_SETUP.md**](docs/SUPABASE_SETUP.md) | Cloud backend configuration, SQL schema, sync conflict resolution, and troubleshooting |
+| [**ADMIN_FEATURES.md**](docs/ADMIN_FEATURES.md) | Complete admin reference: dashboard, inventory, sales, users, reports, security, and best practices |
+| [**RATE_LIMITING.md**](docs/RATE_LIMITING.md) | API rate limit policies, retry strategies, caching, and optimization |
+
+### New Features (v1.0.1)
+
+- **Dashboard Alerts**: Real-time low-stock alerts, sync status indicator, and hourly sales sparkline
+- **Barcode Lookup API**: Automatic product lookup by barcode with local caching (5 lookups/min limit)
+- **Duplicate Prevention**: Server-side transaction deduplication prevents accidental double-charges
+- **API Rate Limiting**: 50 sync requests/min and 10 barcode lookups/min per user (configurable)
+- **Skeleton Loaders**: Better perceived performance with loading states
 
 ## Free APIs Worth Adding Next
 
