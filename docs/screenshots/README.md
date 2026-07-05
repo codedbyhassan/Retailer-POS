@@ -23,7 +23,7 @@ A modern, fully-featured retail management platform built with React and Vite. E
 
 ### Secure Login Interface
 
-![Retailer-POS Login Screen](https://raw.githubusercontent.com/codedbyhassan/Retailer-POS/main/docs/screenshots/01-dashboard.png)
+![Retailer-POS Login Screen](./01-dashboard.png)
 
 **Authentication Features:**
 - Industry-standard secure authentication
@@ -52,7 +52,7 @@ A modern, fully-featured retail management platform built with React and Vite. E
 
 ### Real-Time Business Intelligence Center
 
-![Retailer-POS Admin Dashboard](https://raw.githubusercontent.com/codedbyhassan/Retailer-POS/main/docs/screenshots/02-admin-dashboard.png)
+![Retailer-POS Admin Dashboard](./02-admin-dashboard.png)
 
 **Dashboard Metrics at a Glance:**
 
@@ -96,7 +96,7 @@ A modern, fully-featured retail management platform built with React and Vite. E
 
 ### Complete Transaction Management System
 
-![Retailer-POS Terminal](https://raw.githubusercontent.com/codedbyhassan/Retailer-POS/main/docs/screenshots/03-pos-page.png)
+![Retailer-POS Terminal](./03-pos-page.png)
 
 **Core POS Capabilities:**
 
@@ -164,7 +164,7 @@ A modern, fully-featured retail management platform built with React and Vite. E
 
 ### Complete Stock Control System
 
-![Inventory Management Dashboard](https://raw.githubusercontent.com/codedbyhassan/Retailer-POS/main/docs/screenshots/04-inventory.png)
+![Inventory Management Dashboard](./04-inventory.png)
 
 **Inventory Overview:**
 
@@ -212,7 +212,7 @@ A modern, fully-featured retail management platform built with React and Vite. E
 
 ### Enterprise Product Management
 
-![Product Catalog Administration](https://raw.githubusercontent.com/codedbyhassan/Retailer-POS/main/docs/screenshots/05-products.png)
+![Product Catalog Administration](./05-products.png)
 
 **Product Database Management:**
 
@@ -263,7 +263,7 @@ A modern, fully-featured retail management platform built with React and Vite. E
 
 ### Complete Transaction Audit Trail
 
-![Sales History Record](https://raw.githubusercontent.com/codedbyhassan/Retailer-POS/main/docs/screenshots/06-sales.png)
+![Sales History Record](./06-sales.png)
 
 **Historical Analysis:**
 
@@ -300,7 +300,7 @@ A modern, fully-featured retail management platform built with React and Vite. E
 
 ### Comprehensive Reporting Dashboard
 
-![Business Reports & Analytics](https://raw.githubusercontent.com/codedbyhassan/Retailer-POS/main/docs/screenshots/07-reports.png)
+![Business Reports & Analytics](./07-reports.png)
 
 **Report Tabs:**
 

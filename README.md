@@ -172,6 +172,16 @@ Complete guides for setup, configuration, and usage:
 | [**ADMIN_FEATURES.md**](docs/ADMIN_FEATURES.md) | Complete admin reference: dashboard, inventory, sales, users, reports, security, and best practices |
 | [**RATE_LIMITING.md**](docs/RATE_LIMITING.md) | API rate limit policies, retry strategies, caching, and optimization |
 
+## Screenshots
+
+A quick visual preview of the main workflows is included below. The full gallery is available in [docs/screenshots/README.md](docs/screenshots/README.md).
+
+![Admin dashboard](docs/screenshots/02-admin-dashboard.png)
+
+![POS checkout experience](docs/screenshots/03-pos-page.png)
+
+![Inventory management](docs/screenshots/04-inventory.png)
+
 ### New Features (v1.0.1)
 
 - **Dashboard Alerts**: Real-time low-stock alerts, sync status indicator, and hourly sales sparkline
