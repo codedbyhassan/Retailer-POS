@@ -7,6 +7,7 @@ import inventoryRoutes from './routes/inventoryRoutes.js';
 import salesRoutes from './routes/salesRoutes.js';
 import reportRoutes from './routes/reportRoutes.js';
 import syncRoutes from './routes/syncRoutes.js';
+import barcodeRoutes from './routes/barcodeRoutes.js';
 import { logger } from './utils/logger.js';
 import { syncRateLimiter, barcodeRateLimiter } from './middleware/rateLimitMiddleware.js';
 
@@ -28,7 +29,7 @@ app.use('/api/inventory', inventoryRoutes);
 app.use('/api/sales', salesRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/sync', syncRateLimiter, syncRoutes);
-app.use('/api/barcode', barcodeRateLimiter);
+app.use('/api/barcode', barcodeRateLimiter, barcodeRoutes);
 
 app.use((err, _req, res, _next) => {
   logger('error', err.message);
