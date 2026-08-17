@@ -18,117 +18,37 @@
     --brand-950: 23 37 84;
   }
 
-  [data-preset='emerald-market'] {
-    --brand-50: 236 253 245;
-    --brand-100: 209 250 229;
-    --brand-200: 167 243 208;
-    --brand-300: 110 231 183;
-    --brand-400: 52 211 153;
-    --brand-500: 16 185 129;
-    --brand-600: 5 150 105;
-    --brand-700: 4 120 87;
-    --brand-800: 6 95 70;
-    --brand-900: 6 78 59;
-    --brand-950: 2 44 34;
-  }
+  [data-preset='emerald-market'] { --brand-50: 236 253 245; --brand-100: 209 250 229; --brand-200: 167 243 208; --brand-300: 110 231 183; --brand-400: 52 211 153; --brand-500: 16 185 129; --brand-600: 5 150 105; --brand-700: 4 120 87; --brand-800: 6 95 70; --brand-900: 6 78 59; --brand-950: 2 44 34; }
+  [data-preset='ruby-retail'] { --brand-50: 255 241 242; --brand-100: 255 228 230; --brand-200: 254 205 211; --brand-300: 253 164 175; --brand-400: 251 113 133; --brand-500: 244 63 94; --brand-600: 225 29 72; --brand-700: 190 18 60; --brand-800: 159 18 57; --brand-900: 136 19 55; --brand-950: 76 5 25; }
+  [data-preset='gold-ledger'] { --brand-50: 255 251 235; --brand-100: 254 243 199; --brand-200: 253 230 138; --brand-300: 252 211 77; --brand-400: 251 191 36; --brand-500: 245 158 11; --brand-600: 217 119 6; --brand-700: 180 83 9; --brand-800: 146 64 14; --brand-900: 120 53 15; --brand-950: 69 26 3; }
+  [data-preset='violet-studio'] { --brand-50: 245 243 255; --brand-100: 237 233 254; --brand-200: 221 214 254; --brand-300: 196 181 253; --brand-400: 167 139 250; --brand-500: 139 92 246; --brand-600: 124 58 237; --brand-700: 109 40 217; --brand-800: 91 33 182; --brand-900: 76 29 149; --brand-950: 46 16 101; }
 
-  [data-preset='ruby-retail'] {
-    --brand-50: 255 241 242;
-    --brand-100: 255 228 230;
-    --brand-200: 254 205 211;
-    --brand-300: 253 164 175;
-    --brand-400: 251 113 133;
-    --brand-500: 244 63 94;
-    --brand-600: 225 29 72;
-    --brand-700: 190 18 60;
-    --brand-800: 159 18 57;
-    --brand-900: 136 19 55;
-    --brand-950: 76 5 25;
-  }
-
-  [data-preset='gold-ledger'] {
-    --brand-50: 255 251 235;
-    --brand-100: 254 243 199;
-    --brand-200: 253 230 138;
-    --brand-300: 252 211 77;
-    --brand-400: 251 191 36;
-    --brand-500: 245 158 11;
-    --brand-600: 217 119 6;
-    --brand-700: 180 83 9;
-    --brand-800: 146 64 14;
-    --brand-900: 120 53 15;
-    --brand-950: 69 26 3;
-  }
-
-  [data-preset='violet-studio'] {
-    --brand-50: 245 243 255;
-    --brand-100: 237 233 254;
-    --brand-200: 221 214 254;
-    --brand-300: 196 181 253;
-    --brand-400: 167 139 250;
-    --brand-500: 139 92 246;
-    --brand-600: 124 58 237;
-    --brand-700: 109 40 217;
-    --brand-800: 91 33 182;
-    --brand-900: 76 29 149;
-    --brand-950: 46 16 101;
-  }
-
-  html {
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    text-rendering: optimizeLegibility;
-  }
-
-  body {
-    @apply bg-surface-secondary font-sans text-gray-900 dark:bg-black dark:text-gray-100;
-  }
-
-  h2 {
-    @apply font-heading text-2xl font-semibold tracking-tight text-gray-900 dark:text-white;
-  }
-
-  h3 {
-    @apply font-heading text-xl font-semibold tracking-tight text-gray-900 dark:text-white;
-  }
+  html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; }
+  body { @apply bg-surface-secondary font-sans text-gray-900 dark:bg-black dark:text-gray-100; }
+  h1, h2, h3, h4 { @apply font-heading tracking-tight text-gray-950 dark:text-white; }
+  h2 { @apply text-2xl font-semibold; }
+  h3 { @apply text-xl font-semibold; }
+  button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
 }
 
 @layer components {
-  .glass-nav {
-    @apply border-b border-black/[0.06] bg-white/80 backdrop-blur-ios backdrop-saturate-150 dark:border-white/[0.08] dark:bg-surface-dark/80;
-  }
-
-  .ios-card {
-    @apply rounded-3xl border border-black/[0.04] bg-white shadow-ios dark:border-white/[0.06] dark:bg-surface-dark dark:shadow-none;
-  }
-
-  .ios-pill {
-    @apply rounded-full px-3.5 py-1.5 text-xs font-medium transition-all duration-200 ease-ios;
-  }
-
-  .ios-menu-item {
-    @apply flex w-full items-center gap-3 rounded-2xl px-3.5 py-2.5 text-sm font-medium text-gray-700 transition-all duration-150 ease-ios hover:bg-black/[0.04] active:scale-[0.98] dark:text-gray-200 dark:hover:bg-white/[0.06];
-  }
+  .glass-nav { @apply border-b border-gray-200/80 bg-white/95 dark:border-white/[0.08] dark:bg-surface-dark/95; }
+  .ios-card { @apply rounded-2xl border border-gray-200/80 bg-white shadow-sm dark:border-white/[0.07] dark:bg-surface-dark dark:shadow-none; }
+  .ios-pill { @apply rounded-full px-3 py-1 text-xs font-semibold transition-colors duration-150; }
+  .ios-menu-item { @apply flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-700 transition-colors duration-150 hover:bg-gray-100 active:bg-gray-200 dark:text-gray-200 dark:hover:bg-white/[0.06] dark:active:bg-white/[0.1]; }
+  .retail-panel { @apply rounded-2xl border border-gray-200 bg-white dark:border-white/[0.08] dark:bg-surface-dark; }
+  .retail-section-title { @apply text-xs font-semibold uppercase tracking-[0.08em] text-gray-500 dark:text-gray-400; }
+  .retail-action { @apply inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-brand-500/30; }
+  .retail-primary { @apply retail-action bg-brand-600 text-white hover:bg-brand-700 active:bg-brand-800; }
+  .retail-secondary { @apply retail-action border border-gray-200 bg-white text-gray-800 hover:bg-gray-50 active:bg-gray-100 dark:border-white/[0.1] dark:bg-white/[0.04] dark:text-gray-100 dark:hover:bg-white/[0.08]; }
 }
 
 @layer utilities {
-  .scrollbar-thin {
-    scrollbar-width: thin;
-  }
+  .scrollbar-thin { scrollbar-width: thin; }
 }
 
 @media print {
-  body * {
-    visibility: hidden;
-  }
-  .receipt-print,
-  .receipt-print * {
-    visibility: visible;
-  }
-  .receipt-print {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-  }
+  body * { visibility: hidden; }
+  .receipt-print, .receipt-print * { visibility: visible; }
+  .receipt-print { position: absolute; left: 0; top: 0; width: 100%; }
 }
