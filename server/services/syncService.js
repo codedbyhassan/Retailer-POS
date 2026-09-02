@@ -6,7 +6,50 @@ const memoryStore = {
   sales: [],
   inventory_logs: [],
   sale_items: [],
+  sync_idempotency: [],
 };
+
+export async function getSyncIdempotency(idempotencyKey) {
+  if (!idempotencyKey || !isSupabaseConfigured()) {
+    return memoryStore.sync_idempotency.find((entry) => entry.idempotency_key === idempotencyKey) || null;
+  }
+
+  const { data, error } = await supabase
+    .from('sync_idempotency')
+    .select('idempotency_key, action, request_id, response, created_at')
+    .eq('idempotency_key', idempotencyKey)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data || null;
+}
+
+export async function saveSyncIdempotency({ idempotencyKey, action, requestId, response }) {
+  if (!idempotencyKey) return;
+
+  if (!isSupabaseConfigured()) {
+    const existing = memoryStore.sync_idempotency.find((entry) => entry.idempotency_key === idempotencyKey);
+    if (!existing) {
+      memoryStore.sync_idempotency.push({
+        idempotency_key: idempotencyKey,
+        action,
+        request_id: requestId,
+        response: response || {},
+        created_at: new Date().toISOString(),
+      });
+    }
+    return;
+  }
+
+  const { error } = await supabase.from('sync_idempotency').upsert({
+    idempotency_key: idempotencyKey,
+    action,
+    request_id: requestId,
+    response: response || {},
+  });
+
+  if (error) throw error;
+}
 
 export async function applySyncAction(item) {
   const { action, payload } = item;
@@ -88,6 +131,14 @@ function applyToMemory(action, payload) {
       return { ok: true };
     }
 
+    case 'ARCHIVE_PRODUCT': {
+      const product = memoryStore.products.find((p) => p.id === payload.id);
+      if (!product) throw new Error(`Product unavailable: ${payload.id}`);
+      product.archived = true;
+      product.updated_at = new Date().toISOString();
+      return { ok: true };
+    }
+
     case 'CREATE_SALE': {
       if (memoryStore.sales.some((sale) => sale.id === payload.sale.id)) return { ok: true, is_duplicate: true };
 
@@ -122,7 +173,7 @@ function applyToMemory(action, payload) {
       const delta = Number(payload.quantity);
       if (!Number.isInteger(delta) || delta === 0) throw new Error('Inventory adjustment quantity cannot be zero');
       if (product.quantity + delta < 0) throw new Error(`Inventory cannot become negative for ${product.name}`);
-      if (memoryStore.inventory_logs.some((log) => log.id === payload.id)) return { ok: true, is_duplicate: true };
+      if (memoryStore.inventory_logs.some((log) => log.id === payload.id)) return { ok: true, is_duplicate: true, new_quantity: product.quantity };
       product.quantity += delta;
       memoryStore.inventory_logs.push(mapInventoryLog(payload));
       return { ok: true, is_duplicate: false, new_quantity: product.quantity };
