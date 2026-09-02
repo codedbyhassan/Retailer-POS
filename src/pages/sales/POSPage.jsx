@@ -32,8 +32,9 @@ export default function POSPage() {
   const total = cart.afterDiscount + taxAmount;
 
   const handleBarcodeSearch = async () => {
-    if (!query.trim()) return;
-    const localMatch = products.find((p) => p.barcode === query.trim());
+    if (!query.trim() || lookingUpBarcode) return;
+    const barcode = query.trim();
+    const localMatch = products.find((p) => p.barcode === barcode);
     if (localMatch && localMatch.quantity > 0) {
       cart.addItem(localMatch);
       setQuery('');
@@ -41,17 +42,15 @@ export default function POSPage() {
       return;
     }
 
-    if (products.length > 0) {
-      setLookingUpBarcode(true);
-      try {
-        const result = await barcodeLookup.lookup(query.trim());
-        if (result.found) toast.info(`Product not in inventory: ${result.name}`);
-        else toast.warning('Barcode not found in database');
-      } catch (err) {
-        toast.error(err.message);
-      } finally {
-        setLookingUpBarcode(false);
-      }
+    setLookingUpBarcode(true);
+    try {
+      const result = await barcodeLookup.lookup(barcode);
+      if (result.found) toast.info(`Product not in inventory: ${result.name}`);
+      else toast.warning('Barcode not found in database');
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setLookingUpBarcode(false);
     }
   };
 
@@ -60,12 +59,14 @@ export default function POSPage() {
   };
 
   const handleCheckout = async () => {
-    if (!cart.items.length || checkingOut) return;
+    if (!cart.items.length || checkingOut || !user?.id) return;
     setCheckingOut(true);
     try {
       const invoiceNumber = generateInvoiceNumber();
       const saleId = generateId('sale');
-      const idempotencyKey = cart.generateTransactionKey();
+      // The sale itself is the durable transaction identity. Unlike a cart fingerprint,
+      // identical legitimate sales must never share an idempotency key.
+      const idempotencyKey = `sale_${saleId}`;
 
       const sale = {
         id: saleId,
@@ -135,7 +136,7 @@ export default function POSPage() {
           {cart.items.length === 0 ? <p className="py-8 text-center text-sm text-gray-500">Cart is empty</p> : <div className="space-y-3">{cart.items.map((item) => <div key={item.product_id} className="rounded-2xl border border-black/[0.04] bg-black/[0.02] p-3.5 dark:border-white/[0.06] dark:bg-white/[0.03]"><div className="flex justify-between gap-2"><span className="text-sm font-semibold">{item.name}</span><button type="button" onClick={() => cart.removeItem(item.product_id)} className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-red-500/10 text-xs text-red-500 transition-all active:scale-90">✕</button></div><div className="mt-3 flex items-center justify-between"><div className="flex items-center gap-1.5"><button type="button" onClick={() => cart.updateQuantity(item.product_id, item.quantity - 1)} className="flex h-8 w-8 items-center justify-center rounded-xl bg-black/[0.05] text-sm font-bold transition-all active:scale-90 dark:bg-white/[0.08]">−</button><span className="min-w-[1.5rem] text-center text-sm font-semibold">{item.quantity}</span><button type="button" onClick={() => cart.updateQuantity(item.product_id, item.quantity + 1)} className="flex h-8 w-8 items-center justify-center rounded-xl bg-black/[0.05] text-sm font-bold transition-all active:scale-90 dark:bg-white/[0.08]">+</button></div><span className="text-sm font-bold">{formatMoney(item.price * item.quantity)}</span></div></div>)}</div>}
         </div>
         <div className="space-y-4 border-t border-black/[0.04] p-4 dark:border-white/[0.06]">
-          <div className="flex items-center gap-3"><label className="text-xs font-semibold uppercase tracking-wide text-gray-500">Discount</label><input type="number" min="0" max="100" value={cart.discount} onChange={(e) => cart.setDiscount(Number(e.target.value))} className="w-16 rounded-xl border border-black/[0.06] bg-black/[0.02] px-2 py-1.5 text-sm font-semibold dark:border-white/[0.08] dark:bg-white/[0.04]" /><span className="text-xs text-gray-400">%</span></div>
+          <div className="flex items-center gap-3"><label className="text-xs font-semibold uppercase tracking-wide text-gray-500">Discount</label><input type="number" min="0" max="100" value={cart.discount} onChange={(e) => cart.setDiscount(e.target.value)} className="w-16 rounded-xl border border-black/[0.06] bg-black/[0.02] px-2 py-1.5 text-sm font-semibold dark:border-white/[0.08] dark:bg-white/[0.04]" /><span className="text-xs text-gray-400">%</span></div>
           <div className="space-y-2 text-sm"><div className="flex justify-between text-gray-600 dark:text-gray-400"><span>Subtotal</span><span className="font-medium text-gray-900 dark:text-white">{formatMoney(cart.subtotal)}</span></div>{cart.discount > 0 && <div className="flex justify-between text-emerald-600"><span>Discount</span><span>-{formatMoney(cart.discountAmount)}</span></div>}<div className="flex justify-between text-gray-600 dark:text-gray-400"><span>Tax ({taxRate}%)</span><span className="font-medium text-gray-900 dark:text-white">{formatMoney(taxAmount)}</span></div><div className="flex justify-between border-t border-black/[0.04] pt-2 text-base font-bold dark:border-white/[0.06]"><span>Total</span><span>{formatMoney(total)}</span></div></div>
           <div className="flex gap-2">{['cash', 'card', 'mobile'].map((m) => <button key={m} type="button" onClick={() => setPaymentMethod(m)} className={`flex-1 rounded-2xl py-2.5 text-xs font-semibold capitalize transition-all duration-200 ease-ios active:scale-[0.97] ${paymentMethod === m ? 'bg-brand-500/10 text-brand-700 ring-2 ring-brand-500/30 dark:bg-brand-500/15 dark:text-brand-300' : 'bg-black/[0.04] text-gray-600 hover:bg-black/[0.07] dark:bg-white/[0.06] dark:text-gray-400'}`}>{m}</button>)}</div>
           <Button className="w-full" size="lg" onClick={handleCheckout} disabled={!cart.items.length || checkingOut}>{checkingOut ? 'Processing...' : `Checkout ${formatMoney(total)}`}</Button>
