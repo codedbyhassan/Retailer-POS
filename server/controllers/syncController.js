@@ -1,4 +1,4 @@
-import { applySyncAction } from '../services/syncService.js';
+import { applySyncAction, getSyncIdempotency, saveSyncIdempotency } from '../services/syncService.js';
 
 const CASHIER_ACTIONS = new Set(['CREATE_SALE']);
 const ADMIN_ACTIONS = new Set([
@@ -9,6 +9,7 @@ const ADMIN_ACTIONS = new Set([
   'CREATE_SALE',
 ]);
 const MAX_PAYLOAD_BYTES = 512 * 1024;
+const MAX_IDEMPOTENCY_KEY_LENGTH = 200;
 
 export async function handleSync(req, res) {
   try {
@@ -44,7 +45,37 @@ export async function handleSync(req, res) {
       item.payload.sale = { ...sale, cashier_id: req.user.id, cashier_email: req.user.email };
     }
 
+    const idempotencyKey = req.headers['x-idempotency-key']?.toString().trim();
+    if (idempotencyKey) {
+      if (idempotencyKey.length > MAX_IDEMPOTENCY_KEY_LENGTH) {
+        return res.status(400).json({ message: 'Idempotency key is too long' });
+      }
+
+      const previous = await getSyncIdempotency(idempotencyKey);
+      if (previous) {
+        if (previous.action !== item.action) {
+          return res.status(409).json({ message: 'Idempotency key was already used for another action' });
+        }
+        return res.json({
+          success: true,
+          id: previous.request_id,
+          result: previous.response,
+          idempotentReplay: true,
+        });
+      }
+    }
+
     const result = await applySyncAction(item);
+
+    if (idempotencyKey) {
+      await saveSyncIdempotency({
+        idempotencyKey,
+        action: item.action,
+        requestId: item.id,
+        response: result,
+      });
+    }
+
     return res.json({ success: true, id: item.id, result });
   } catch (err) {
     return res.status(500).json({ message: err.message });
