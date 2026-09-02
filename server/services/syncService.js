@@ -40,9 +40,17 @@ export async function applySyncAction(item) {
       return data || { ok: true };
     }
 
-    case 'INVENTORY_ADJUST':
-      result = await supabase.from('inventory_logs').upsert(mapInventoryLog(payload));
-      break;
+    case 'INVENTORY_ADJUST': {
+      const { data, error } = await supabase.rpc('apply_inventory_adjustment_atomic', {
+        p_log: mapInventoryLog(payload),
+        p_actor_id: item.actor_id || null,
+      });
+      if (error) {
+        logger('error', 'Atomic inventory sync failed', { id: item.id, error: error.message });
+        throw error;
+      }
+      return data || { ok: true };
+    }
 
     default:
       throw new Error(`Unknown sync action: ${action}`);
@@ -108,10 +116,17 @@ function applyToMemory(action, payload) {
       return { ok: true, is_duplicate: false };
     }
 
-    case 'INVENTORY_ADJUST':
-      memoryStore.inventory_logs = memoryStore.inventory_logs.filter((log) => log.id !== payload.id);
+    case 'INVENTORY_ADJUST': {
+      const product = memoryStore.products.find((p) => p.id === payload.product_id);
+      if (!product) throw new Error(`Product unavailable: ${payload.product_id}`);
+      const delta = Number(payload.quantity);
+      if (!Number.isInteger(delta) || delta === 0) throw new Error('Inventory adjustment quantity cannot be zero');
+      if (product.quantity + delta < 0) throw new Error(`Inventory cannot become negative for ${product.name}`);
+      if (memoryStore.inventory_logs.some((log) => log.id === payload.id)) return { ok: true, is_duplicate: true };
+      product.quantity += delta;
       memoryStore.inventory_logs.push(mapInventoryLog(payload));
-      return { ok: true };
+      return { ok: true, is_duplicate: false, new_quantity: product.quantity };
+    }
 
     default:
       throw new Error(`Unknown sync action: ${action}`);
@@ -141,7 +156,15 @@ function mapSale(s) {
     id: s.id,
     invoice_number: s.invoice_number,
     cashier_id: s.cashier_id,
+    cashier_email: s.cashier_email,
+    cashier_name: s.cashier_name,
+    subtotal: s.subtotal,
+    discount: s.discount,
+    discount_amount: s.discount_amount,
+    tax_rate: s.tax_rate,
+    tax_amount: s.tax_amount,
     total: s.total,
+    payment_method: s.payment_method,
     created_at: s.created_at,
   };
 }
@@ -153,18 +176,22 @@ function mapSaleItem(i) {
     product_id: i.product_id,
     quantity: i.quantity,
     price: i.price,
+    cost_price: i.cost_price,
     subtotal: i.subtotal,
+    product_name: i.product_name,
   };
 }
 
 function mapInventoryLog(l) {
+  const quantity = Number(l.quantity);
+  if (!Number.isInteger(quantity) || quantity === 0) throw new Error('Inventory adjustment quantity must be a non-zero integer');
   return {
     id: l.id || `inv_${Date.now()}_${l.product_id}`,
     product_id: l.product_id,
-    type: l.type,
-    quantity: l.quantity,
+    type: l.type || 'ADJUSTMENT',
+    quantity,
     reference_id: l.reference_id,
-    reference_type: l.reference_type,
+    reference_type: l.reference_type || 'inventory_adjustment',
     created_at: l.created_at || new Date().toISOString(),
   };
 }
