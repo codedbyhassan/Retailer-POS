@@ -41,6 +41,7 @@ DECLARE
   v_product RECORD;
   v_delta INTEGER;
   v_log_id TEXT;
+  v_inserted BOOLEAN := FALSE;
 BEGIN
   v_log_id := COALESCE(p_log->>'id', 'inv_' || gen_random_uuid()::text);
   v_delta := (p_log->>'quantity')::INTEGER;
@@ -60,6 +61,18 @@ BEGIN
     RAISE EXCEPTION 'Product % is unavailable', p_log->>'product_id';
   END IF;
 
+  -- The log id is the idempotency key for an offline inventory mutation.
+  -- A retry must return the previous result and must never apply the delta twice.
+  IF EXISTS (SELECT 1 FROM inventory_logs WHERE id = v_log_id) THEN
+    RETURN jsonb_build_object(
+      'ok', true,
+      'is_duplicate', true,
+      'product_id', v_product.id,
+      'new_quantity', v_product.quantity,
+      'log_id', v_log_id
+    );
+  END IF;
+
   IF v_product.quantity + v_delta < 0 THEN
     RAISE EXCEPTION 'Inventory cannot become negative for %. Available: %, adjustment: %',
       v_product.name, v_product.quantity, v_delta;
@@ -75,12 +88,8 @@ BEGIN
     p_log->>'reference_id',
     COALESCE(p_log->>'reference_type', 'inventory_adjustment'),
     COALESCE((p_log->>'created_at')::TIMESTAMPTZ, NOW())
-  )
-  ON CONFLICT (id) DO NOTHING;
-
-  IF NOT EXISTS (SELECT 1 FROM inventory_logs WHERE id = v_log_id AND product_id = v_product.id) THEN
-    RAISE EXCEPTION 'Failed to record inventory adjustment';
-  END IF;
+  );
+  v_inserted := TRUE;
 
   UPDATE products
      SET quantity = quantity + v_delta,
@@ -100,6 +109,7 @@ BEGIN
 
   RETURN jsonb_build_object(
     'ok', true,
+    'is_duplicate', FALSE,
     'product_id', v_product.id,
     'new_quantity', v_product.quantity + v_delta,
     'log_id', v_log_id
