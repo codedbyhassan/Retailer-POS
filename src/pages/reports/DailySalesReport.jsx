@@ -32,7 +32,7 @@ export default function DailySalesReport() {
         let saleUnits = 0;
         for (const item of items) {
           const product = await getProductById(item.product_id);
-          const itemProfit = product ? (item.price - product.cost_price) * item.quantity : 0;
+          const itemCost = Number(item.cost_price ?? product?.cost_price ?? 0);\n          const itemProfit = (item.price - itemCost) * item.quantity;
           profit += itemProfit;
           units += item.quantity;
           saleUnits += item.quantity;
