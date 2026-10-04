@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getSalesWithItems } from '../../services/indexeddb/salesStore';
+import { listSales } from '../../services/online/salesService';
 import { useBusinessSettings } from '../../hooks/useBusinessSettings';
 import SalesTable from '../../components/tables/SalesTable';
 import Input from '../../components/ui/Input';
@@ -13,7 +13,7 @@ export default function SalesHistoryPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    getSalesWithItems().then(setSales);
+    listSales().then(setSales).catch((error) => console.error(error));
   }, []);
 
   const filtered = sales.filter((s) => {
