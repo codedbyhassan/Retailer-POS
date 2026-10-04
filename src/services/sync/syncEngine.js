@@ -5,6 +5,7 @@ import {
   markSyncItemConflict,
 } from './syncQueue';
 import { pullCloudChanges } from './syncPull';
+import { getDeviceId } from './deviceIdentity';
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
 const TOKEN_KEY = 'retailer_token';
@@ -40,6 +41,7 @@ export async function runSync() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         };
+        headers['X-Device-ID'] = getDeviceId();
         if (item.idempotencyKey) headers['X-Idempotency-Key'] = item.idempotencyKey;
 
         const res = await fetch(`${API_BASE}/api/sync`, {
