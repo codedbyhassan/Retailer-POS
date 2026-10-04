@@ -152,6 +152,18 @@ $;
 revoke all on function private.current_business_id() from public;
 grant execute on function private.current_business_id() to authenticated;
 
+create or replace function private.current_role()
+returns text
+language sql stable security definer set search_path = public
+as $
+  select role from public.profiles
+  where id = (select auth.uid()) and active = true
+  limit 1
+$;
+
+revoke all on function private.current_role() from public;
+grant execute on function private.current_role() to authenticated;
+
 create or replace function public.create_sale(p_sale jsonb, p_items jsonb)
 returns jsonb
 language plpgsql
@@ -217,7 +229,7 @@ declare
   v_after integer;
   v_id uuid := gen_random_uuid();
 begin
-  if v_business is null or v_user is null then raise exception 'Not authorized'; end if;
+  if v_business is null or v_user is null or private.current_role() not in ('owner','admin','manager','inventory_manager') then raise exception 'Not authorized'; end if;
   if p_delta = 0 then raise exception 'Inventory adjustment cannot be zero'; end if;
 
   select * into v_product from products where id=p_product_id and business_id=v_business and archived=false for update;
@@ -250,7 +262,13 @@ alter table public.business_settings enable row level security;
 create policy "members can view business" on public.businesses for select to authenticated using (id = private.current_business_id());
 create policy "members can view profiles" on public.profiles for select to authenticated using (business_id = private.current_business_id());
 create policy "members can view products" on public.products for select to authenticated using (business_id = private.current_business_id());
-create policy "managers can manage products" on public.products for all to authenticated using (business_id = private.current_business_id()) with check (business_id = private.current_business_id());
+create policy "managers can insert products" on public.products for insert to authenticated
+  with check (business_id = private.current_business_id() and private.current_role() in ('owner','admin','manager'));
+create policy "managers can update products" on public.products for update to authenticated
+  using (business_id = private.current_business_id() and private.current_role() in ('owner','admin','manager'))
+  with check (business_id = private.current_business_id() and private.current_role() in ('owner','admin','manager'));
+create policy "managers can delete products" on public.products for delete to authenticated
+  using (business_id = private.current_business_id() and private.current_role() in ('owner','admin','manager'));
 create policy "members can view customers" on public.customers for select to authenticated using (business_id = private.current_business_id());
 create policy "members can manage customers" on public.customers for insert to authenticated with check (business_id = private.current_business_id());
 create policy "members can update customers" on public.customers for update to authenticated using (business_id = private.current_business_id()) with check (business_id = private.current_business_id());
