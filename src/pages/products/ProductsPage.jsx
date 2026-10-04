@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getAllProducts, createProduct, updateProduct, archiveProduct } from '../../services/indexeddb/productsStore';
-import { addToSyncQueue } from '../../services/sync/syncQueue';
+import { listProducts, createProduct, updateProduct, archiveProduct } from '../../services/online/productService';
 import { useBusinessSettings } from '../../hooks/useBusinessSettings';
 import ProductTable from '../../components/tables/ProductTable';
 import ProductForm from '../../components/forms/ProductForm';
@@ -35,12 +34,10 @@ export default function ProductsPage() {
     try {
       if (modal?.product) {
         const updated = await updateProduct(modal.product.id, { ...data, quantity: modal.product.quantity });
-        await addToSyncQueue('UPDATE_PRODUCT', updated);
-        toast.success('Product updated');
+                toast.success('Product updated');
       } else {
         const created = await createProduct(data);
-        await addToSyncQueue('CREATE_PRODUCT', created);
-        toast.success('Product created');
+                toast.success('Product created');
       }
       setModal(null);
       load();
@@ -55,8 +52,7 @@ export default function ProductsPage() {
     setLoading(true);
     try {
       await archiveProduct(archiveTarget.id);
-      await addToSyncQueue('ARCHIVE_PRODUCT', { id: archiveTarget.id });
-      toast.success('Product archived');
+            toast.success('Product archived');
       setArchiveTarget(null);
       load();
     } finally {
