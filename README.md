@@ -1,10 +1,10 @@
 # Retailer POS
 
-Offline-first point of sale, inventory, product, and reporting system for small and medium retailers. The app is built to keep selling even when the internet drops: products, sales, inventory movements, settings, product images, theme presets, and sync queue state are stored locally first with IndexedDB, then synchronized through the backend when available.
+online-first point of sale, inventory, product, and reporting system for small and medium retailers. The app is built to keep selling even when the internet drops: products, sales, inventory movements, settings, product images, theme presets, and sync queue state are stored locally first with IndexedDB, then synchronized through the backend when available.
 
 ## Highlights
 
-- Offline-first POS with local checkout, cart discounts, tax, payment method tracking, and printable purchase receipts.
+- online-first POS with local checkout, cart discounts, tax, payment method tracking, and printable purchase receipts.
 - Redesigned sales terminal with responsive desktop/tablet layout, product cards, stronger search, and a cleaner cart panel.
 - Professional receipt modal with item-level pricing, quantities, cashier, payment method, totals, receipt footer, and print support.
 - Product catalog with admin-side image uploads stored in IndexedDB, image compression, SKU/barcode/category metadata, and archive support.
@@ -117,7 +117,7 @@ Settings include five runtime presets that update the app's brand color system w
 
 Presets affect brand buttons, active states, chart bars, focus rings, and highlighted UI.
 
-## Offline-First Data Model
+## online-first Data Model
 
 The frontend stores operational data in IndexedDB:
 
@@ -248,4 +248,21 @@ server/
 
 ## Current Status
 
-This project includes a complete offline-first retail workflow: admin product and inventory management, POS checkout, receipt printing, app-wide currency settings, visual presets, IndexedDB product images, sales history, sticky navigation, viewport-safe modals, and detailed reporting analytics.
+This project includes a complete online-first retail workflow: admin product and inventory management, POS checkout, receipt printing, app-wide currency settings, visual presets, IndexedDB product images, sales history, sticky navigation, viewport-safe modals, and detailed reporting analytics.
+
+
+## Current architecture
+
+Retailer POS is currently online-only. The React/Vite frontend uses Supabase directly for authentication, PostgreSQL data access, database transactions, Row Level Security, and realtime capabilities.
+
+- React + Vite frontend
+- Supabase Auth
+- Supabase PostgreSQL
+- PostgreSQL RPCs for atomic sales and inventory operations
+- Row Level Security for business and role isolation
+- Supabase Storage for future product media
+- No Express server
+- No client-side operational database
+- No synchronization engine
+
+Offline support is intentionally deferred to a separate future project/phase.
