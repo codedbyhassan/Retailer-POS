@@ -1,5 +1,6 @@
 import { supabase, isSupabaseConfigured } from '../config/db.js';
 import { logger } from '../utils/logger.js';
+import { upsertUser } from './userService.js';
 
 const memoryStore = {
   products: [],
@@ -7,6 +8,7 @@ const memoryStore = {
   inventory_logs: [],
   sale_items: [],
   sync_idempotency: [],
+  users: [],
 };
 
 export async function getSyncIdempotency(idempotencyKey) {
@@ -59,6 +61,12 @@ export async function applySyncAction(item) {
 
   let result;
   switch (action) {
+    case 'CREATE_USER':
+    case 'UPDATE_USER':
+    case 'DEACTIVATE_USER':
+      result = await upsertUser({ ...payload, active: action === 'DEACTIVATE_USER' ? false : payload.active });
+      break;
+
     case 'CREATE_PRODUCT':
     case 'UPDATE_PRODUCT':
       result = await supabase.from('products').upsert(mapProduct(payload));
@@ -123,6 +131,15 @@ async function recordAudit(item) {
 
 function applyToMemory(action, payload) {
   switch (action) {
+    case 'CREATE_USER':
+    case 'UPDATE_USER':
+    case 'DEACTIVATE_USER': {
+      const existing = memoryStore.users.find((u) => u.id === payload.id || u.email === payload.email);
+      const user = { ...existing, ...payload, active: action === 'DEACTIVATE_USER' ? false : payload.active !== false };
+      if (existing) Object.assign(existing, user); else memoryStore.users.push(user);
+      return { ok: true };
+    }
+
     case 'CREATE_PRODUCT':
     case 'UPDATE_PRODUCT': {
       const existing = memoryStore.products.find((p) => p.id === payload.id);
