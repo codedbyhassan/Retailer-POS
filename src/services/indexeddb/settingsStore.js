@@ -71,7 +71,18 @@ export async function updateUser(id, data) {
 }
 
 export async function deactivateUser(id) {
-  const updated = await updateUser(id, { active: false });
-  await addToSyncQueue('DEACTIVATE_USER', { id, email: updated.email, name: updated.name, role: updated.role, active: false });
+  const db = await getDB();
+  const existing = await db.get('users', id);
+  if (!existing) throw new Error('User not found');
+  if (existing.role === 'admin') throw new Error('Cannot deactivate admin');
+  const updated = { ...existing, active: false };
+  await db.put('users', updated);
+  await addToSyncQueue('DEACTIVATE_USER', {
+    id,
+    email: updated.email,
+    name: updated.name,
+    role: updated.role,
+    active: false,
+  });
   return updated;
 }
