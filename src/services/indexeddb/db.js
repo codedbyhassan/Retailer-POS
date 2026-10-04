@@ -99,7 +99,7 @@ export async function seedDatabase() {
 
   const defaultUsers = [
     {
-      id: generateId('user'),
+      id: 'admin_1',
       name: 'Admin User',
       email: 'admin@retailer.com',
       role: 'admin',
@@ -108,7 +108,7 @@ export async function seedDatabase() {
       ...adminCredentials,
     },
     {
-      id: generateId('user'),
+      id: 'cashier_1',
       name: 'Cashier User',
       email: 'cashier@retailer.com',
       role: 'cashier',
