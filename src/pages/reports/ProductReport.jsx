@@ -35,7 +35,7 @@ export default function ProductReport() {
               profit: 0,
             };
           }
-          stats[item.product_id].sold += item.quantity;
+          stats[item.product_id].sold += item.quantity;\n          if (new Date(sale.created_at) >= recentStart) stats[item.product_id].recentSold += item.quantity;
           stats[item.product_id].revenue += item.subtotal;
           stats[item.product_id].profit += profit;
 
