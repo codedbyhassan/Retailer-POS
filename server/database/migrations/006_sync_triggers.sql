@@ -15,6 +15,8 @@ BEGIN
   ELSIF TG_TABLE_NAME = 'settings' THEN
     v_id := NEW.key;
     v_data := jsonb_build_object('key', NEW.key, 'value', NEW.value, 'updated_at', NEW.updated_at);
+  ELSIF TG_TABLE_NAME = 'users' THEN
+    v_data := to_jsonb(NEW) - 'password_hash' - 'password_salt' - 'password_algorithm';
   ELSE
     v_data := to_jsonb(NEW);
   END IF;
@@ -54,7 +56,7 @@ INSERT INTO sync_changes(entity_type, entity_id, operation, data)
 SELECT 'inventory_logs', id, 'upsert', to_jsonb(i) FROM inventory_logs i
 WHERE NOT EXISTS (SELECT 1 FROM sync_changes WHERE entity_type = 'inventory_logs');
 INSERT INTO sync_changes(entity_type, entity_id, operation, data)
-SELECT 'users', id, 'upsert', to_jsonb(u) FROM users u
+SELECT 'users', id, 'upsert', (to_jsonb(u) - 'password_hash' - 'password_salt' - 'password_algorithm') FROM users u
 WHERE NOT EXISTS (SELECT 1 FROM sync_changes WHERE entity_type = 'users');
 INSERT INTO sync_changes(entity_type, entity_id, operation, data)
 SELECT 'customers', id, 'upsert', data FROM customers
