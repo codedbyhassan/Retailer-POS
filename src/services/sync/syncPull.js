@@ -84,7 +84,13 @@ export async function pullCloudChanges() {
     const body = await res.json();
     const changes = body.changes || [];
     if (!changes.length) {
-      localStorage.setItem(CURSOR_KEY, String(body.nextCursor ?? cursor));
+      const nextCursor = Number(body.nextCursor ?? cursor);
+      if (body.hasMore && nextCursor > cursor) {
+        cursor = nextCursor;
+        localStorage.setItem(CURSOR_KEY, String(cursor));
+        continue;
+      }
+      localStorage.setItem(CURSOR_KEY, String(nextCursor));
       break;
     }
 
