@@ -263,3 +263,23 @@ function mapInventoryLog(l) {
     created_at: l.created_at || new Date().toISOString(),
   };
 }
+
+
+export async function pullSyncChanges(cursor = 0, limit = 500) {
+  const safeCursor = Math.max(0, Number(cursor) || 0);
+  const safeLimit = Math.min(1000, Math.max(1, Number(limit) || 500));
+  if (!isSupabaseConfigured()) return { changes: [], nextCursor: safeCursor, hasMore: false };
+  const { data, error } = await supabase
+    .from('sync_changes')
+    .select('sequence, entity_type, entity_id, operation, data, changed_at')
+    .gt('sequence', safeCursor)
+    .order('sequence', { ascending: true })
+    .limit(safeLimit);
+  if (error) throw error;
+  const changes = data || [];
+  return {
+    changes,
+    nextCursor: changes.length ? Number(changes[changes.length - 1].sequence) : safeCursor,
+    hasMore: changes.length === safeLimit,
+  };
+}
