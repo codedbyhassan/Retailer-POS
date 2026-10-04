@@ -1,6 +1,7 @@
 import { getDB } from './db';
 import { generateId } from '../../utils/generateInvoiceNumber';
 import { hashPassword } from '../../utils/password';
+import { addToSyncQueue } from '../sync/syncQueue';
 
 const DEFAULT_BUSINESS_SETTINGS = {
   business_name: 'My Retail Shop',
@@ -42,6 +43,7 @@ export async function createUser(data) {
     created_at: new Date().toISOString(),
   };
   await db.add('users', user);
+  await addToSyncQueue('CREATE_USER', user);
   return user;
 }
 
@@ -64,9 +66,12 @@ export async function updateUser(id, data) {
   delete updated.password;
 
   await db.put('users', updated);
+  await addToSyncQueue('UPDATE_USER', updated);
   return updated;
 }
 
 export async function deactivateUser(id) {
-  return updateUser(id, { active: false });
+  const updated = await updateUser(id, { active: false });
+  await addToSyncQueue('DEACTIVATE_USER', { id, email: updated.email, name: updated.name, role: updated.role, active: false });
+  return updated;
 }
