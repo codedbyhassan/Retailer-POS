@@ -1,7 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getSalesByDateRange } from '../../services/indexeddb/salesStore';
-import { getSaleItems } from '../../services/indexeddb/salesStore';
-import { getProductById } from '../../services/indexeddb/productsStore';
+import { listSales } from '../../services/online/salesService';
 import { useBusinessSettings } from '../../hooks/useBusinessSettings';
 import Input from '../../components/ui/Input';
 import ReportHeader from '../../components/analytics/ReportHeader';
@@ -15,7 +13,9 @@ export default function DailySalesReport() {
 
   useEffect(() => {
     async function load() {
-      const sales = await getSalesByDateRange(date, date);
+      const start = new Date(`${date}T00:00:00`).toISOString();
+      const end = new Date(`${date}T23:59:59.999`).toISOString();
+      const sales = await listSales({ from: start, to: end });
       let revenue = 0;
       let profit = 0;
       let units = 0;
@@ -28,11 +28,11 @@ export default function DailySalesReport() {
         paymentStats[sale.payment_method || 'cash'] = (paymentStats[sale.payment_method || 'cash'] || 0) + sale.total;
         hourlySales[new Date(sale.created_at).getHours()].revenue += sale.total;
         hourlySales[new Date(sale.created_at).getHours()].count += 1;
-        const items = await getSaleItems(sale.id);
+        const items = sale.sale_items || [];
         let saleUnits = 0;
         for (const item of items) {
-          const product = await getProductById(item.product_id);
-          const itemCost = Number(item.cost_price ?? product?.cost_price ?? 0);\n          const itemProfit = (item.price - itemCost) * item.quantity;
+          const itemCost = Number(item.cost_price ?? 0);
+          const itemProfit = (item.price - itemCost) * item.quantity;
           profit += itemProfit;
           units += item.quantity;
           saleUnits += item.quantity;
