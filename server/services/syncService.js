@@ -265,7 +265,7 @@ function mapInventoryLog(l) {
 }
 
 
-export async function pullSyncChanges(cursor = 0, limit = 500) {
+export async function pullSyncChanges(cursor = 0, limit = 500, userId = null) {
   const safeCursor = Math.max(0, Number(cursor) || 0);
   const safeLimit = Math.min(1000, Math.max(1, Number(limit) || 500));
   if (!isSupabaseConfigured()) return { changes: [], nextCursor: safeCursor, hasMore: false };
@@ -276,7 +276,7 @@ export async function pullSyncChanges(cursor = 0, limit = 500) {
     .order('sequence', { ascending: true })
     .limit(safeLimit);
   if (error) throw error;
-  const changes = data || [];
+  const changes = (data || []).filter((change) => change.entity_type !== 'users' || change.entity_id === userId);
   return {
     changes,
     nextCursor: changes.length ? Number(changes[changes.length - 1].sequence) : safeCursor,
