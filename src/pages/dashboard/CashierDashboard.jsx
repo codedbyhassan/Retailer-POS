@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getSalesByDateRange } from '../../services/indexeddb/salesStore';
+import { listSales } from '../../services/online/salesService';
 import { formatDate } from '../../utils/formatCurrency';
 import { useBusinessSettings } from '../../hooks/useBusinessSettings';
 
@@ -10,7 +10,8 @@ export default function CashierDashboard() {
   useEffect(() => {
     async function load() {
       const today = new Date().toISOString().slice(0, 10);
-      const sales = await getSalesByDateRange(today, today);
+      const allSales = await listSales();
+      const sales = allSales.filter((s) => s.status !== 'voided' && new Date(s.created_at).toISOString().slice(0, 10) === today);
       setData({
         total: sales.reduce((s, x) => s + x.total, 0),
         count: sales.length,
