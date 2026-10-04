@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { ToastProvider, useToast } from '../components/ui/Toast';
 import { appStore } from '../store/appStore';
-import { startSyncEngine } from '../services/sync/syncEngine';
 import { useSettingsLoader } from '../hooks/useSettingsLoader';
 import AppRoutes from './AppRoutes';
 
@@ -11,10 +10,7 @@ function AppInitializer() {
 
   useEffect(() => {
     appStore.initTheme();
-    return startSyncEngine(({ synced, failed }) => {
-      if (synced > 0) toast.success(`Synced ${synced} item(s)`);
-      if (failed > 0) toast.error(`${failed} sync item(s) failed`);
-    });
+    return undefined;
   }, [toast]);
 
   if (loading) {
