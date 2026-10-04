@@ -1,14 +1,16 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getSyncQueueCount } from '../services/sync/syncQueue';
+import { getSyncQueueCount, getSyncConflicts } from '../services/sync/syncQueue';
 import { getLastSyncTime } from '../services/sync/syncEngine';
 
 export function useSyncStatus() {
   const [pendingCount, setPendingCount] = useState(0);
   const [lastSync, setLastSync] = useState(getLastSyncTime());
+  const [conflictCount, setConflictCount] = useState(0);
 
   const refresh = useCallback(async () => {
-    const count = await getSyncQueueCount();
+    const [count, conflicts] = await Promise.all([getSyncQueueCount(), getSyncConflicts()]);
     setPendingCount(count);
+    setConflictCount(conflicts.length);
     setLastSync(getLastSyncTime());
   }, []);
 
@@ -18,5 +20,5 @@ export function useSyncStatus() {
     return () => clearInterval(interval);
   }, [refresh]);
 
-  return { pendingCount, lastSync, refresh };
+  return { pendingCount, conflictCount, lastSync, refresh };
 }
