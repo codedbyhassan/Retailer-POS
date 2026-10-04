@@ -1,12 +1,10 @@
 import { useEffect, useState } from 'react';
-import { getBusinessSettings, saveBusinessSettings } from '../../services/indexeddb/settingsStore';
+import { getBusinessSettings, saveBusinessSettings } from '../../services/online/settingsService';
 import { appStore } from '../../store/appStore';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
 import { useToast } from '../../components/ui/Toast';
 import { CURRENCY_OPTIONS } from '../../utils/formatCurrency';
-import { getSyncConflicts, resolveSyncConflict } from '../../services/sync/syncQueue';
-import { runSync } from '../../services/sync/syncEngine';
 
 const PRESETS = [
   { id: 'classic-blue', name: 'Classic Blue', description: 'Clean, familiar, and operational.', swatches: ['bg-blue-600', 'bg-blue-400', 'bg-slate-900'] },
@@ -19,15 +17,10 @@ const PRESETS = [
 export default function BusinessSettings() {
   const [form, setForm] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [conflicts, setConflicts] = useState([]);
-  const [syncing, setSyncing] = useState(false);
   const toast = useToast();
-
-  const loadConflicts = async () => setConflicts(await getSyncConflicts());
 
   useEffect(() => {
     getBusinessSettings().then(setForm);
-    loadConflicts();
   }, []);
 
   const handleSave = async (e) => {
@@ -128,60 +121,7 @@ export default function BusinessSettings() {
           </div>
         </section>
 
-        <section className="ios-card p-6">
-          <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <h3>Data Sync</h3>
-              <p className="mt-1 text-sm text-gray-500">Monitor cloud synchronization and resolve operations that could not be applied.</p>
-            </div>
-            <Button
-              type="button"
-              variant="secondary"
-              disabled={syncing || !navigator.onLine}
-              onClick={async () => {
-                setSyncing(true);
-                try {
-                  await runSync();
-                  await loadConflicts();
-                  toast.success('Sync completed');
-                } catch (err) {
-                  toast.error(err.message);
-                } finally {
-                  setSyncing(false);
-                }
-              }}
-            >
-              {syncing ? 'Syncing...' : 'Sync Now'}
-            </Button>
-          </div>
-          {conflicts.length === 0 ? (
-            <div className="rounded-2xl bg-emerald-500/10 px-4 py-3 text-sm font-medium text-emerald-700 dark:text-emerald-300">
-              No unresolved sync conflicts.
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {conflicts.map((item) => (
-                <div key={item.id} className="rounded-2xl border border-red-200/70 bg-red-50/70 p-4 dark:border-red-900/40 dark:bg-red-950/20">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="font-semibold text-red-900 dark:text-red-200">{item.action.replaceAll('_', ' ')}</p>
-                      <p className="mt-1 text-sm text-red-700/80 dark:text-red-300/80">{item.error || 'Cloud rejected this operation.'}</p>
-                      <p className="mt-1 text-xs text-red-700/60 dark:text-red-400/60">{new Date(item.createdAt).toLocaleString()}</p>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button type="button" size="sm" variant="secondary" onClick={async () => { await resolveSyncConflict(item.id, 'retry'); await loadConflicts(); }}>
-                        Retry
-                      </Button>
-                      <Button type="button" size="sm" variant="ghost" onClick={async () => { await resolveSyncConflict(item.id, 'discard_local'); await loadConflicts(); }}>
-                        Discard
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
+
 
         <div className="flex justify-end">
           <Button type="submit" disabled={loading}>{loading ? 'Saving...' : 'Save Settings'}</Button>
