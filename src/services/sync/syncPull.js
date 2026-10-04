@@ -22,7 +22,7 @@ function isProtectedByPendingChange(change, pending) {
     }
     if (change.entity_type === 'sales') return item.action === 'CREATE_SALE' && p.sale?.id === id;
     if (change.entity_type === 'sale_items') return item.action === 'CREATE_SALE' && (p.items || []).some((i) => i.id === id);
-    if (change.entity_type === 'inventory_logs') return item.action === 'INVENTORY_ADJUST' && p.id === id;
+    if (change.entity_type === 'inventory_logs') return item.action === 'INVENTORY_ADJUST' && p.product_id === id;
     return false;
   });
 }
