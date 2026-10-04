@@ -75,6 +75,24 @@ export async function getDB() {
   });
 }
 
+async function migrateDefaultUserIds(db) {
+  const mappings = [
+    ['admin@retailer.com', 'admin_1'],
+    ['cashier@retailer.com', 'cashier_1'],
+  ];
+
+  for (const [email, targetId] of mappings) {
+    const user = await db.getFromIndex('users', 'email', email);
+    if (!user || user.id === targetId) continue;
+
+    const existingTarget = await db.get('users', targetId);
+    if (!existingTarget) {
+      await db.delete('users', user.id);
+      await db.put('users', { ...user, id: targetId });
+    }
+  }
+}
+
 async function migrateLegacyPasswords(db) {
   const users = await db.getAll('users');
   for (const user of users) {
@@ -88,6 +106,7 @@ async function migrateLegacyPasswords(db) {
 export async function seedDatabase() {
   const db = await getDB();
   await migrateLegacyPasswords(db);
+  await migrateDefaultUserIds(db);
 
   const userCount = await db.count('users');
   if (userCount > 0) return;
