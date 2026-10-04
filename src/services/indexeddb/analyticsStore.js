@@ -28,7 +28,7 @@ export async function getAnalyticsData() {
   const weekStart = daysAgo(7);
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
-  const productMap = Object.fromEntries(products.map((p) => [p.id, p]));
+  const productMap = Object.fromEntries(products.map((p) => [p.id, p]));\n  const recentStart = daysAgo(7);
 
   let todayRevenue = 0;
   let todayProfit = 0;
@@ -60,7 +60,7 @@ export async function getAnalyticsData() {
 
     for (const item of sale.items || []) {
       const product = productMap[item.product_id];
-      const cost = product?.cost_price ?? 0;
+      const cost = Number(item.cost_price ?? product?.cost_price ?? 0);
       saleProfit += (item.price - cost) * item.quantity;
 
       if (!productStats[item.product_id]) {
@@ -78,7 +78,7 @@ export async function getAnalyticsData() {
           reorderLevel: product?.reorder_level ?? 10,
         };
       }
-      productStats[item.product_id].qty += item.quantity;
+      productStats[item.product_id].qty += item.quantity;\n      if (saleDate >= recentStart && saleDate <= now) productStats[item.product_id].recentQty += item.quantity;
       productStats[item.product_id].revenue += item.subtotal;
       productStats[item.product_id].profit += (item.price - cost) * item.quantity;
       productStats[item.product_id].transactions += 1;
