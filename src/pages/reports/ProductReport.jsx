@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { getAllProducts } from '../../services/indexeddb/productsStore';
-import { getSalesWithItems } from '../../services/indexeddb/salesStore';
+import { listProducts } from '../../services/online/productService';
+import { listSales } from '../../services/online/salesService';
 import Badge, { stockBadge, stockLabel } from '../../components/ui/Badge';
 import { useBusinessSettings } from '../../hooks/useBusinessSettings';
 import ReportHeader from '../../components/analytics/ReportHeader';
@@ -13,35 +13,30 @@ export default function ProductReport() {
 
   useEffect(() => {
     async function load() {
-      const [products, sales] = await Promise.all([
-        getAllProducts(),
-        getSalesWithItems(),
-      ]);
-
+      const [products, sales] = await Promise.all([listProducts(), listSales()]);
       const stats = {};
       const categoryStats = {};
-      for (const sale of sales) {
-        for (const item of sale.items) {
+
+      for (const sale of sales.filter((s) => s.status !== 'voided')) {
+        for (const item of sale.sale_items || []) {
           const product = products.find((p) => p.id === item.product_id);
-          const cost = product?.cost_price || 0;
-          const profit = (item.price - cost) * item.quantity;
+          const cost = Number(item.cost_price ?? product?.cost_price ?? 0);
+          const profit = (Number(item.price) - cost) * Number(item.quantity);
           if (!stats[item.product_id]) {
             stats[item.product_id] = {
               ...product,
               id: item.product_id,
               name: product?.name || item.product_name || 'Unknown',
-              sold: 0,
-              revenue: 0,
-              profit: 0,
+              sold: 0, revenue: 0, profit: 0,
             };
           }
-          stats[item.product_id].sold += item.quantity;\n          if (new Date(sale.created_at) >= recentStart) stats[item.product_id].recentSold += item.quantity;
-          stats[item.product_id].revenue += item.subtotal;
+          stats[item.product_id].sold += Number(item.quantity);
+          stats[item.product_id].revenue += Number(item.subtotal);
           stats[item.product_id].profit += profit;
 
           const category = product?.category || 'Uncategorized';
           if (!categoryStats[category]) categoryStats[category] = { label: category, value: 0 };
-          categoryStats[category].value += item.subtotal;
+          categoryStats[category].value += Number(item.subtotal);
         }
       }
 
@@ -49,14 +44,12 @@ export default function ProductReport() {
         const stat = stats[p.id] || {};
         const revenue = stat.revenue || 0;
         const profit = stat.profit || 0;
+        const sold = stat.sold || 0;
         return {
-          ...p,
-          sold: stat.sold || 0,
-          revenue,
-          profit,
+          ...p, sold, revenue, profit,
           margin: revenue ? (profit / revenue) * 100 : 0,
-          velocity: (stat.sold || 0) / 7,
-          stockCoverDays: stat.sold ? p.quantity / ((stat.sold || 0) / 7) : null,
+          velocity: sold / 7,
+          stockCoverDays: sold ? p.quantity / (sold / 7) : null,
         };
       });
 
@@ -64,18 +57,16 @@ export default function ProductReport() {
       const totalProfit = withSales.reduce((s, p) => s + p.profit, 0);
       const totalUnits = withSales.reduce((s, p) => s + p.sold, 0);
       setReport({
-        products: withSales.sort((a, b) => b.revenue - a.revenue),
+        products: [...withSales].sort((a, b) => b.revenue - a.revenue),
         bestSellers: [...withSales].sort((a, b) => b.sold - a.sold).slice(0, 8),
         slowMovers: [...withSales].sort((a, b) => a.sold - b.sold).slice(0, 8),
         outOfStock: products.filter((p) => p.quantity <= 0),
         categoryBreakdown: Object.values(categoryStats).sort((a, b) => b.value - a.value),
-        totalRevenue,
-        totalProfit,
-        totalUnits,
+        totalRevenue, totalProfit, totalUnits,
         margin: totalRevenue ? (totalProfit / totalRevenue) * 100 : 0,
       });
     }
-    load();
+    load().catch((error) => console.error(error));
   }, []);
 
   if (!report) return null;
