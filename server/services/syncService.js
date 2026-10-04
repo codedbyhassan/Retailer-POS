@@ -276,10 +276,11 @@ export async function pullSyncChanges(cursor = 0, limit = 500, userId = null) {
     .order('sequence', { ascending: true })
     .limit(safeLimit);
   if (error) throw error;
-  const changes = (data || []).filter((change) => change.entity_type !== 'users' || change.entity_id === userId);
+  const rawChanges = data || [];
+  const changes = rawChanges.filter((change) => change.entity_type !== 'users' || change.entity_id === userId);
   return {
     changes,
-    nextCursor: changes.length ? Number(changes[changes.length - 1].sequence) : safeCursor,
-    hasMore: changes.length === safeLimit,
+    nextCursor: rawChanges.length ? Number(rawChanges[rawChanges.length - 1].sequence) : safeCursor,
+    hasMore: rawChanges.length === safeLimit,
   };
 }
