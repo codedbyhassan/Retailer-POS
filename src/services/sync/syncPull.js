@@ -59,6 +59,20 @@ async function applyChange(db, change) {
 
   const data = change.data;
   if (!data) return;
+  if (change.entity_type === 'users') {
+    const localUser = await db.get('users', change.entity_id);
+    await db.put('users', {
+      ...localUser,
+      ...data,
+      id: change.entity_id,
+      ...(localUser?.password_hash ? {
+        password_hash: localUser.password_hash,
+        password_salt: localUser.password_salt,
+        password_algorithm: localUser.password_algorithm,
+      } : {}),
+    });
+    return;
+  }
   if (change.entity_type === 'customers' || change.entity_type === 'product_images') {
     await db.put(store, { ...data, id: change.entity_id });
   } else {
