@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { getProductById } from '../../services/indexeddb/productsStore';
-import { getInventoryLogsByProduct } from '../../services/indexeddb/inventoryStore';
+import { getProduct } from '../../services/online/productService';
+import { listInventoryLogs } from '../../services/online/inventoryService';
 import Badge, { stockBadge, stockLabel } from '../../components/ui/Badge';
 import { formatCurrency, formatDate } from '../../utils/formatCurrency';
 import { useBusinessSettings } from '../../hooks/useBusinessSettings';
@@ -16,8 +16,8 @@ export default function ProductDetail() {
   useEffect(() => {
     async function load() {
       const [p, l] = await Promise.all([
-        getProductById(id),
-        getInventoryLogsByProduct(id),
+        getProduct(id),
+        listInventoryLogs({ productId: id }),
       ]);
       setProduct(p);
       setLogs(l.reverse());
