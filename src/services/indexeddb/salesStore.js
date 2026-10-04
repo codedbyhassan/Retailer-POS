@@ -41,7 +41,7 @@ export async function createSale({ sale, items }) {
     products.set(item.product_id, product);
   }
 
-  await tx.objectStore('sales').add(sale);
+  const pendingSale = { ...sale, sync_status: sale.sync_status || 'pending' };\n  await tx.objectStore('sales').add(pendingSale);
 
   for (const item of items) {
     await tx.objectStore('sale_items').add(item);
@@ -76,14 +76,14 @@ export async function createSale({ sale, items }) {
   });
 
   await tx.done;
-  return sale;
+  return pendingSale;
 }
 
 export async function getSalesByDateRange(startDate, endDate) {
   const sales = await getAllSales();
   const start = new Date(startDate).getTime();
   const end = new Date(endDate).getTime() + 86400000;
-  return sales.filter((s) => {
+  return sales.filter((s) => s.sync_status !== 'voided').filter((s) => {
     const t = new Date(s.created_at).getTime();
     return t >= start && t < end;
   });
