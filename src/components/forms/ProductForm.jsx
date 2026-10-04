@@ -87,7 +87,7 @@ export default function ProductForm({ initial, onSubmit, onCancel, loading }) {
           </div>
           <Input label="Cost Price" name="cost_price" type="number" step="0.01" value={form.cost_price} onChange={handleChange} error={errors.cost_price} />
           <Input label="Selling Price" name="selling_price" type="number" step="0.01" value={form.selling_price} onChange={handleChange} error={errors.selling_price} />
-          <Input label="Quantity" name="quantity" type="number" value={form.quantity} onChange={handleChange} />
+          {!initial && <Input label="Opening Stock" name="quantity" type="number" min="0" value={form.quantity} onChange={handleChange} />}
           <Input label="Reorder Level" name="reorder_level" type="number" value={form.reorder_level} onChange={handleChange} />
         </div>
       </div>
