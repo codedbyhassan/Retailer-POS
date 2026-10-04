@@ -1,4 +1,4 @@
-import { applySyncAction, getSyncIdempotency, saveSyncIdempotency } from '../services/syncService.js';
+import { applySyncAction, getSyncIdempotency, saveSyncIdempotency, pullSyncChanges } from '../services/syncService.js';
 
 const CASHIER_ACTIONS = new Set(['CREATE_SALE']);
 const ADMIN_ACTIONS = new Set([
@@ -91,7 +91,6 @@ export async function handleSync(req, res) {
 }
 
 
-import { pullSyncChanges } from '../services/syncService.js';
 
 export async function handleSyncPull(req, res) {
   try {
