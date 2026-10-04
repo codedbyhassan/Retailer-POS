@@ -134,11 +134,23 @@ create table if not exists public.business_settings (
   updated_at timestamptz not null default now()
 );
 
-create or replace function public.current_business_id()
-returns uuid language sql stable security invoker set search_path = public
-as $$
-  select business_id from public.profiles where id = (select auth.uid()) and active = true limit 1
-$$;
+create schema if not exists private;
+
+create or replace function private.private.current_business_id()
+returns uuid
+language sql
+stable
+security definer
+set search_path = public
+as $
+  select business_id
+  from public.profiles
+  where id = (select auth.uid()) and active = true
+  limit 1
+$;
+
+revoke all on function private.private.current_business_id() from public;
+grant execute on function private.private.current_business_id() to authenticated;
 
 create or replace function public.create_sale(p_sale jsonb, p_items jsonb)
 returns jsonb
@@ -147,7 +159,7 @@ security invoker
 set search_path = public
 as $$
 declare
-  v_business uuid := current_business_id();
+  v_business uuid := private.current_business_id();
   v_user uuid := auth.uid();
   v_sale_id uuid;
   v_item jsonb;
@@ -198,7 +210,7 @@ security invoker
 set search_path = public
 as $$
 declare
-  v_business uuid := current_business_id();
+  v_business uuid := private.current_business_id();
   v_user uuid := auth.uid();
   v_product public.products%rowtype;
   v_before integer;
@@ -235,19 +247,19 @@ alter table public.inventory_movements enable row level security;
 alter table public.audit_logs enable row level security;
 alter table public.business_settings enable row level security;
 
-create policy "members can view business" on public.businesses for select to authenticated using (id = current_business_id());
-create policy "members can view profiles" on public.profiles for select to authenticated using (business_id = current_business_id());
-create policy "members can view products" on public.products for select to authenticated using (business_id = current_business_id());
-create policy "managers can manage products" on public.products for all to authenticated using (business_id = current_business_id()) with check (business_id = current_business_id());
-create policy "members can view customers" on public.customers for select to authenticated using (business_id = current_business_id());
-create policy "members can manage customers" on public.customers for insert to authenticated with check (business_id = current_business_id());
-create policy "members can update customers" on public.customers for update to authenticated using (business_id = current_business_id()) with check (business_id = current_business_id());
-create policy "members can view sales" on public.sales for select to authenticated using (business_id = current_business_id());
-create policy "members can view sale items" on public.sale_items for select to authenticated using (exists (select 1 from sales s where s.id=sale_id and s.business_id=current_business_id()));
-create policy "members can view inventory" on public.inventory_movements for select to authenticated using (business_id = current_business_id());
-create policy "members can view audit" on public.audit_logs for select to authenticated using (business_id = current_business_id());
-create policy "members can view settings" on public.business_settings for select to authenticated using (business_id = current_business_id());
-create policy "admins can update settings" on public.business_settings for update to authenticated using (business_id = current_business_id()) with check (business_id = current_business_id());
+create policy "members can view business" on public.businesses for select to authenticated using (id = private.current_business_id());
+create policy "members can view profiles" on public.profiles for select to authenticated using (business_id = private.current_business_id());
+create policy "members can view products" on public.products for select to authenticated using (business_id = private.current_business_id());
+create policy "managers can manage products" on public.products for all to authenticated using (business_id = private.current_business_id()) with check (business_id = private.current_business_id());
+create policy "members can view customers" on public.customers for select to authenticated using (business_id = private.current_business_id());
+create policy "members can manage customers" on public.customers for insert to authenticated with check (business_id = private.current_business_id());
+create policy "members can update customers" on public.customers for update to authenticated using (business_id = private.current_business_id()) with check (business_id = private.current_business_id());
+create policy "members can view sales" on public.sales for select to authenticated using (business_id = private.current_business_id());
+create policy "members can view sale items" on public.sale_items for select to authenticated using (exists (select 1 from sales s where s.id=sale_id and s.business_id=private.current_business_id()));
+create policy "members can view inventory" on public.inventory_movements for select to authenticated using (business_id = private.current_business_id());
+create policy "members can view audit" on public.audit_logs for select to authenticated using (business_id = private.current_business_id());
+create policy "members can view settings" on public.business_settings for select to authenticated using (business_id = private.current_business_id());
+create policy "admins can update settings" on public.business_settings for update to authenticated using (business_id = private.current_business_id()) with check (business_id = private.current_business_id());
 
 revoke all on function public.create_sale(jsonb,jsonb) from public;
 revoke all on function public.adjust_inventory(uuid,integer,text,text) from public;
