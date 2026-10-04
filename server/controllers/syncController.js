@@ -89,3 +89,17 @@ export async function handleSync(req, res) {
     return res.status(status).json({ message });
   }
 }
+
+
+import { pullSyncChanges } from '../services/syncService.js';
+
+export async function handleSyncPull(req, res) {
+  try {
+    const cursor = req.query.cursor || 0;
+    const limit = req.query.limit || 500;
+    const result = await pullSyncChanges(cursor, limit);
+    return res.json({ success: true, ...result });
+  } catch (err) {
+    return res.status(500).json({ message: err?.message || 'Sync pull failed' });
+  }
+}
