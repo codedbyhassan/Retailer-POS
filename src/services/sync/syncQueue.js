@@ -9,7 +9,7 @@ export async function addToSyncQueue(action, payload) {
     id: generateId('queue'),
     action,
     payload,
-    idempotencyKey: payload?.idempotencyKey || null,
+    idempotencyKey: payload?.idempotencyKey || (action === 'INVENTORY_ADJUST' ? payload?.id : null),
     status: 'pending',
     retryCount: 0,
     createdAt: new Date().toISOString(),
