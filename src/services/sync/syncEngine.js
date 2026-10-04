@@ -79,14 +79,13 @@ export async function runSync() {
     isSyncing = false;
   }
 
-  return { synced, failed, pulled: 0, blocked: false };
 }
 
 export function startSyncEngine(onSyncComplete) {
   const trySync = async () => {
     if (navigator.onLine) {
       const result = await runSync();
-      if (result.synced > 0 || result.failed > 0) onSyncComplete?.(result);
+      if (result.synced > 0 || result.failed > 0 || result.pulled > 0 || result.blocked) onSyncComplete?.(result);
     }
   };
 
