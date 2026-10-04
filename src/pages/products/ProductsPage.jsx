@@ -34,7 +34,7 @@ export default function ProductsPage() {
     setLoading(true);
     try {
       if (modal?.product) {
-        const updated = await updateProduct(modal.product.id, data);
+        const updated = await updateProduct(modal.product.id, { ...data, quantity: modal.product.quantity });
         await addToSyncQueue('UPDATE_PRODUCT', updated);
         toast.success('Product updated');
       } else {
