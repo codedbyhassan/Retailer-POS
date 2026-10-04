@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { getSalesByDateRange } from '../../services/indexeddb/salesStore';
-import { getLowStockProducts } from '../../services/indexeddb/productsStore';
-import { getInventorySummary } from '../../services/indexeddb/inventoryStore';
+import { listSales } from '../../services/online/salesService';
+import { getLowStockProducts } from '../../services/online/productService';
+import { getInventorySummary } from '../../services/online/inventoryService';
 import { useBusinessSettings } from '../../hooks/useBusinessSettings';
-import { LowStockAlert, SyncStatus, HourlySalesSparkline, SkeletonLoader } from '../../components/analytics/DashboardAlerts';
+import { LowStockAlert, HourlySalesSparkline, SkeletonLoader } from '../../components/analytics/DashboardAlerts';
 
 function StatCard({ label, value, sub, alert }) {
   return (
@@ -19,26 +19,7 @@ function StatCard({ label, value, sub, alert }) {
 export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
   const [lowStockProducts, setLowStockProducts] = useState([]);
-  const [lastSync, setLastSync] = useState(localStorage.getItem('retailer_last_sync'));
-  const [isSyncing, setIsSyncing] = useState(false);
   const { formatMoney } = useBusinessSettings();
-
-  useEffect(() => {
-    const handleSyncStart = () => setIsSyncing(true);
-    const handleSyncEnd = () => {
-      setIsSyncing(false);
-      setLastSync(new Date().toISOString());
-      localStorage.setItem('retailer_last_sync', new Date().toISOString());
-    };
-
-    window.addEventListener('sync:start', handleSyncStart);
-    window.addEventListener('sync:end', handleSyncEnd);
-
-    return () => {
-      window.removeEventListener('sync:start', handleSyncStart);
-      window.removeEventListener('sync:end', handleSyncEnd);
-    };
-  }, []);
 
   useEffect(() => {
     async function load() {
@@ -46,12 +27,11 @@ export default function AdminDashboard() {
       const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
       const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0, 10);
 
-      const todaySales = await getSalesByDateRange(today, today);
-      const weekSales = await getSalesByDateRange(weekAgo, today);
-      const monthSales = await getSalesByDateRange(monthStart, today);
-      const lowStock = await getLowStockProducts();
-      const inventory = await getInventorySummary();
-
+      const [allSales, lowStock, inventory] = await Promise.all([listSales(), getLowStockProducts(), getInventorySummary()]);
+      const inRange = (sales, start) => sales.filter((s) => s.status !== 'voided' && new Date(s.created_at) >= new Date(start));
+      const todaySales = inRange(allSales, today);
+      const weekSales = inRange(allSales, weekAgo);
+      const monthSales = inRange(allSales, monthStart);
       setStats({
         todayTotal: todaySales.reduce((s, x) => s + x.total, 0),
         todayCount: todaySales.length,
@@ -73,7 +53,7 @@ export default function AdminDashboard() {
     <div>
       <div className="mb-6 flex items-center justify-between">
         <h2>Dashboard</h2>
-        <SyncStatus lastSync={lastSync} isSyncing={isSyncing} />
+
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
