@@ -1,5 +1,6 @@
 import { getDB } from './db';
 import { generateId } from '../../utils/generateInvoiceNumber';
+import { hashPassword } from '../../utils/password';
 
 const DEFAULT_BUSINESS_SETTINGS = {
   business_name: 'My Retail Shop',
@@ -29,11 +30,13 @@ export async function getAllUsers() {
 
 export async function createUser(data) {
   const db = await getDB();
+  if (!data.password) throw new Error('Password is required');
+  const credentials = await hashPassword(data.password);
   const user = {
     id: generateId('user'),
     name: data.name,
-    email: data.email.toLowerCase(),
-    password: data.password,
+    email: data.email.trim().toLowerCase(),
+    ...credentials,
     role: data.role || 'cashier',
     active: true,
     created_at: new Date().toISOString(),
@@ -46,13 +49,20 @@ export async function updateUser(id, data) {
   const db = await getDB();
   const existing = await db.get('users', id);
   if (!existing) throw new Error('User not found');
+
+  const { password, ...profileData } = data;
+  const credentials = password ? await hashPassword(password) : {};
   const updated = {
     ...existing,
-    ...data,
+    ...profileData,
+    ...credentials,
     id,
     email: existing.email,
-    password: data.password || existing.password,
   };
+
+  // Never retain or create plaintext credentials in IndexedDB.
+  delete updated.password;
+
   await db.put('users', updated);
   return updated;
 }
