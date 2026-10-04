@@ -84,3 +84,47 @@ export async function resetFailedItems() {
   }
   await tx.done;
 }
+
+
+export async function markSyncItemConflict(id, error, details = {}) {
+  const db = await getDB();
+  const item = await db.get('sync_queue', id);
+  if (!item) return;
+  await db.put('sync_queue', {
+    ...item,
+    status: 'conflict',
+    error: error instanceof Error ? error.message : String(error),
+    conflict: {
+      ...details,
+      detectedAt: new Date().toISOString(),
+    },
+  });
+}
+
+export async function getSyncConflicts() {
+  const db = await getDB();
+  return (await db.getAll('sync_queue'))
+    .filter((item) => item.status === 'conflict')
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+}
+
+export async function resolveSyncConflict(id, resolution = 'keep_local') {
+  const db = await getDB();
+  const item = await db.get('sync_queue', id);
+  if (!item || item.status !== 'conflict') return false;
+
+  if (resolution === 'discard_local') {
+    await db.delete('sync_queue', id);
+    return true;
+  }
+
+  await db.put('sync_queue', {
+    ...item,
+    status: 'pending',
+    retryCount: 0,
+    nextRetryAt: new Date().toISOString(),
+    error: null,
+    conflict: null,
+  });
+  return true;
+}
