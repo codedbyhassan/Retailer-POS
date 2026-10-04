@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { getSaleDetail } from '../../services/indexeddb/salesStore';
+import { getSale } from '../../services/online/salesService';
 import { formatCurrency, formatDate } from '../../utils/formatCurrency';
 import { useBusinessSettings } from '../../hooks/useBusinessSettings';
 
@@ -10,7 +10,7 @@ export default function SaleDetailPage() {
   const { currency } = useBusinessSettings();
 
   useEffect(() => {
-    getSaleDetail(id).then(setSale);
+    getSale(id).then(setSale);
   }, [id]);
 
   if (!sale) return <div>Loading...</div>;
