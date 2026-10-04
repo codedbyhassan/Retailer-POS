@@ -253,3 +253,47 @@ revoke all on function public.create_sale(jsonb,jsonb) from public;
 revoke all on function public.adjust_inventory(uuid,integer,text,text) from public;
 grant execute on function public.create_sale(jsonb,jsonb) to authenticated;
 grant execute on function public.adjust_inventory(uuid,integer,text,text) to authenticated;
+
+insert into public.businesses (id, name, currency)
+values ('00000000-0000-0000-0000-000000000001', 'My Retail Shop', 'GHS')
+on conflict (id) do nothing;
+
+insert into public.business_settings (id, business_id, business_name, currency, tax_rate, receipt_footer, low_stock_threshold, preset)
+values (1, '00000000-0000-0000-0000-000000000001', 'My Retail Shop', 'GHS', 0, 'Thank you for shopping with us!', 10, 'classic-blue')
+on conflict (id) do nothing;
+
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_business uuid := '00000000-0000-0000-0000-000000000001';
+  v_role text := 'cashier';
+begin
+  if not exists (select 1 from public.profiles) then
+    v_role := 'owner';
+  end if;
+
+  insert into public.profiles (id, business_id, name, email, role)
+  values (
+    new.id,
+    v_business,
+    coalesce(new.raw_user_meta_data->>'name', split_part(new.email, '@', 1)),
+    new.email,
+    v_role
+  )
+  on conflict (id) do update
+    set email = excluded.email, name = excluded.name;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+after insert on auth.users
+for each row execute procedure public.handle_new_user();
+
+revoke all on function public.handle_new_user() from public;
