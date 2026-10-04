@@ -21,33 +21,27 @@ export async function addInventoryLog({ product_id, type, quantity, note = '' })
   if (!['add', 'remove'].includes(normalizedType)) throw new Error('Inventory adjustment type must be add or remove');
 
   const delta = normalizedType === 'remove' ? -amount : amount;
+  const now = new Date().toISOString();
+  const tx = db.transaction(['products', 'inventory_logs', 'audit_logs'], 'readwrite');
+  const product = await tx.objectStore('products').get(product_id);
+  if (!product) { tx.abort(); throw new Error('Product not found'); }
+  if (product.archived) { tx.abort(); throw new Error('Cannot adjust archived product'); }
+  const beforeQuantity = Number(product.quantity || 0);
+  const nextQuantity = beforeQuantity + delta;
+  if (nextQuantity < 0) { tx.abort(); throw new Error(`Inventory cannot become negative for ${product.name}`); }
+
   const log = {
     id: generateId('inv'),
     product_id,
     type: normalizedType,
     quantity: delta,
+    before_quantity: beforeQuantity,
+    after_quantity: nextQuantity,
     note,
-    created_at: new Date().toISOString(),
+    created_at: now,
   };
 
-  const tx = db.transaction(['products', 'inventory_logs', 'audit_logs'], 'readwrite');
-  const product = await tx.objectStore('products').get(product_id);
-  if (!product) {
-    tx.abort();
-    throw new Error('Product not found');
-  }
-  if (product.archived) {
-    tx.abort();
-    throw new Error('Cannot adjust archived product');
-  }
-
-  const nextQuantity = Number(product.quantity || 0) + delta;
-  if (nextQuantity < 0) {
-    tx.abort();
-    throw new Error(`Inventory cannot become negative for ${product.name}`);
-  }
-
-  await tx.objectStore('products').put({ ...product, quantity: nextQuantity, updated_at: new Date().toISOString() });
+    await tx.objectStore('products').put({ ...product, quantity: nextQuantity, updated_at: new Date().toISOString() });
   await tx.objectStore('inventory_logs').add(log);
   await tx.objectStore('audit_logs').add({
     id: `audit_${log.id}`,
