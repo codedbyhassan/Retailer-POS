@@ -24,8 +24,12 @@ export async function searchProducts(query = '') {
 }
 
 export async function createProduct(product) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+  const { data: profile, error: profileError } = await supabase.from('profiles').select('business_id').eq('id', user.id).single();
+  if (profileError) throw profileError;
   const { image: _image, image_data: _imageData, image_id: _imageId, ...input } = product;
-  const payload = { ...input, quantity: Number(input.quantity) || 0, cost_price: Number(input.cost_price) || 0, selling_price: Number(input.selling_price) || 0, reorder_level: Number(input.reorder_level) || 10 };
+  const payload = { ...input, business_id: profile.business_id, quantity: Number(input.quantity) || 0, cost_price: Number(input.cost_price) || 0, selling_price: Number(input.selling_price) || 0, reorder_level: Number(input.reorder_level) || 10 };
   const { data, error } = await supabase.from('products').insert(payload).select().single();
   if (error) throw error;
   return data;
