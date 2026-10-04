@@ -1,26 +1,22 @@
-import { useEffect, useState, useCallback } from 'react';
-import { getBusinessSettings, saveBusinessSettings } from '../services/indexeddb/settingsStore';
+import { useEffect, useState } from 'react';
+import { getBusinessSettings } from '../services/online/settingsService';
 import { appStore } from '../store/appStore';
 
 export function useSettingsLoader() {
   const [loading, setLoading] = useState(true);
 
-  const refresh = useCallback(async () => {
-    const settings = await getBusinessSettings();
-    appStore.setBusinessSettings(settings);
-    setLoading(false);
-    return settings;
+  useEffect(() => {
+    let mounted = true;
+    getBusinessSettings()
+      .then((settings) => {
+        if (!mounted) return;
+        appStore.setBusinessSettings(settings);
+      })
+      .catch((error) => console.error('Unable to load business settings:', error))
+      .finally(() => mounted && setLoading(false));
+
+    return () => { mounted = false; };
   }, []);
 
-  useEffect(() => {
-    refresh();
-  }, [refresh]);
-
-  return { loading, refresh };
-}
-
-export async function persistBusinessSettings(form) {
-  const saved = await saveBusinessSettings(form);
-  appStore.setBusinessSettings(saved);
-  return saved;
+  return { loading };
 }
