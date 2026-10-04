@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { getAnalyticsData } from '../../services/indexeddb/analyticsStore';
+import { getAnalyticsData } from '../../services/online/analyticsService';
 import { useBusinessSettings } from '../../hooks/useBusinessSettings';
 import ProductCard from '../../components/products/ProductCard';
 import { BarChart, MiniStat, TrendChart, HourlyChart } from '../../components/analytics/ChartWidgets';
