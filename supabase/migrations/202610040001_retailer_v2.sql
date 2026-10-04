@@ -136,7 +136,7 @@ create table if not exists public.business_settings (
 
 create schema if not exists private;
 
-create or replace function private.private.current_business_id()
+create or replace function private.current_business_id()
 returns uuid
 language sql
 stable
@@ -149,8 +149,8 @@ as $
   limit 1
 $;
 
-revoke all on function private.private.current_business_id() from public;
-grant execute on function private.private.current_business_id() to authenticated;
+revoke all on function private.current_business_id() from public;
+grant execute on function private.current_business_id() to authenticated;
 
 create or replace function public.create_sale(p_sale jsonb, p_items jsonb)
 returns jsonb
