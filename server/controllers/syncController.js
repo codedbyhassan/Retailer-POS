@@ -96,7 +96,7 @@ export async function handleSyncPull(req, res) {
   try {
     const cursor = req.query.cursor || 0;
     const limit = req.query.limit || 500;
-    const result = await pullSyncChanges(cursor, limit);
+    const result = await pullSyncChanges(cursor, limit, req.user?.id);
     return res.json({ success: true, ...result });
   } catch (err) {
     return res.status(500).json({ message: err?.message || 'Sync pull failed' });
