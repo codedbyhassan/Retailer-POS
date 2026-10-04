@@ -1,17 +1,16 @@
 import { useEffect } from 'react';
-import { ToastProvider, useToast } from '../components/ui/Toast';
+import { ToastProvider } from '../components/ui/Toast';
 import { appStore } from '../store/appStore';
 import { useSettingsLoader } from '../hooks/useSettingsLoader';
 import AppRoutes from './AppRoutes';
 
 function AppInitializer() {
-  const toast = useToast();
   const { loading } = useSettingsLoader();
 
   useEffect(() => {
     appStore.initTheme();
     return undefined;
-  }, [toast]);
+  }, []);
 
   if (loading) {
     return (
