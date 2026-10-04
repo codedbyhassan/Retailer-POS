@@ -5,7 +5,7 @@ const BARCODE_API = 'https://api.barcodelookup.com/v2/products';
 const API_KEY = import.meta.env.VITE_BARCODE_API_KEY || 'demo'; // Free tier key or user-provided
 const CACHE_NAME = 'barcode_cache';
 const RATE_LIMIT_WINDOW = 60_000; // 1 minute
-const MAX_LOOKUPS_PER_MINUTE = 5;
+const MAX_LOOKUPS_PER_MINUTE = 5;\nconst CACHE_TTL = 7 * 24 * 60 * 60 * 1000;
 
 class BarcodeLookupService {
   constructor() {
@@ -116,7 +116,7 @@ class BarcodeLookupService {
 
   // Clear old cache entries (older than 7 days)
   cleanupCache() {
-    const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    const oneWeekAgo = Date.now() - CACHE_TTL;
     let cleaned = 0;
 
     for (const [barcode, data] of this.cache.entries()) {
