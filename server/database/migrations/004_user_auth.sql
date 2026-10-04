@@ -9,3 +9,14 @@ ALTER TABLE users
 UPDATE users SET active = TRUE WHERE active IS NULL;
 
 CREATE INDEX IF NOT EXISTS idx_users_email_active ON users(email, active);
+
+-- Keep the two initial accounts available for first online login.
+INSERT INTO users (id, name, email, role, active)
+VALUES
+  ('admin_1', 'Admin User', 'admin@retailer.com', 'admin', TRUE),
+  ('cashier_1', 'Cashier User', 'cashier@retailer.com', 'cashier', TRUE)
+ON CONFLICT (id) DO UPDATE SET
+  name = EXCLUDED.name,
+  email = EXCLUDED.email,
+  role = EXCLUDED.role,
+  active = TRUE;
