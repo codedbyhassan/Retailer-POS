@@ -35,63 +35,55 @@ export async function getPendingSyncItems() {
 }
 
 export async function getSyncQueueCount() {
-  const pending = await getPendingSyncItems();
-  return pending.length;
+  return (await getPendingSyncItems()).length;
 }
 
 async function updateSaleSyncStatus(db, item, status) {
   if (item?.action !== 'CREATE_SALE' || !item.payload?.sale?.id) return;
   const sale = await db.get('sales', item.payload.sale.id);
-  if (!sale) return;
-  await db.put('sales', { ...sale, sync_status: status });
+  if (sale) await db.put('sales', { ...sale, sync_status: status });
 }
 
 async function reconcileRejectedSale(db, item, error) {
   if (item?.action !== 'CREATE_SALE' || !item.payload?.sale?.id) return false;
   const { sale, items = [] } = item.payload;
-  const existingSale = await db.get('sales', sale.id);
-  if (!existingSale) return false;
+  const currentSale = await db.get('sales', sale.id);
+  if (!currentSale || currentSale.status === 'voided') return false;
 
   const tx = db.transaction(['sales', 'products', 'inventory_logs', 'audit_logs'], 'readwrite');
-  const saleStore = tx.objectStore('sales');
-  const productStore = tx.objectStore('products');
-  const inventoryStore = tx.objectStore('inventory_logs');
-  const auditStore = tx.objectStore('audit_logs');
+  const sales = tx.objectStore('sales');
+  const products = tx.objectStore('products');
+  const inventory = tx.objectStore('inventory_logs');
+  const audit = tx.objectStore('audit_logs');
 
-  const currentSale = await saleStore.get(sale.id);
-  if (!currentSale || currentSale.sync_status === 'voided') {
-    await tx.done;
-    return false;
-  }
-
-  for (const itemLine of items) {
-    const product = await productStore.get(itemLine.product_id);
+  for (const line of items) {
+    const product = await products.get(line.product_id);
     if (!product) continue;
-    await productStore.put({
+    await products.put({
       ...product,
-      quantity: product.quantity + itemLine.quantity,
+      quantity: product.quantity + line.quantity,
       updated_at: new Date().toISOString(),
     });
-    await inventoryStore.add({
+    await inventory.add({
       id: generateId('inv'),
       product_id: product.id,
       type: 'SALE_REVERSAL',
-      quantity: itemLine.quantity,
+      quantity: line.quantity,
       reference_id: sale.id,
       reference_type: 'sale_conflict',
       created_at: new Date().toISOString(),
     });
   }
 
-  await saleStore.put({
+  await sales.put({
     ...currentSale,
-    sync_status: 'conflict',
     status: 'voided',
+    sync_status: 'conflict',
     sync_error: error instanceof Error ? error.message : String(error),
     voided_at: new Date().toISOString(),
   });
 
-  await auditStore.add({
+  await audit.add({
     id: generateId('audit'),
     action: 'VOID_CONFLICTED_SALE',
     entity_type: 'sale',
@@ -100,7 +92,10 @@ async function reconcileRejectedSale(db, item, error) {
     metadata: {
       invoice_number: sale.invoice_number,
       reason: error instanceof Error ? error.message : String(error),
-      inventory_reversed: items.map((line) => ({ product_id: line.product_id, quantity: line.quantity })),
+      inventory_reversed: items.map((line) => ({
+        product_id: line.product_id,
+        quantity: line.quantity,
+      })),
     },
     created_at: new Date().toISOString(),
   });
@@ -112,14 +107,15 @@ async function reconcileRejectedSale(db, item, error) {
 export async function markSyncItemComplete(id) {
   const db = await getDB();
   const item = await db.get('sync_queue', id);
-  if (item) {
-    await db.put('sync_queue', {
-      ...item,
-      status: 'completed',
-      completedAt: new Date().toISOString(),
-      error: null,
-    });
-  }
+  if (!item) return;
+
+  await db.put('sync_queue', {
+    ...item,
+    status: 'completed',
+    completedAt: new Date().toISOString(),
+    error: null,
+  });
+  await updateSaleSyncStatus(db, item, 'synced');
 }
 
 export async function markSyncItemFailed(id, error) {
@@ -155,17 +151,20 @@ export async function resetFailedItems() {
   await tx.done;
 }
 
-
 export async function markSyncItemConflict(id, error, details = {}) {
   const db = await getDB();
   const item = await db.get('sync_queue', id);
   if (!item) return;
+
+  const reconciled = await reconcileRejectedSale(db, item, error);
+
   await db.put('sync_queue', {
     ...item,
     status: 'conflict',
     error: error instanceof Error ? error.message : String(error),
     conflict: {
       ...details,
+      reconciled,
       detectedAt: new Date().toISOString(),
     },
   });
@@ -187,6 +186,8 @@ export async function resolveSyncConflict(id, resolution = 'discard_local') {
     await db.delete('sync_queue', id);
     return true;
   }
+
+  if (resolution !== 'retry') return false;
 
   await db.put('sync_queue', {
     ...item,
