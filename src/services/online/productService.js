@@ -1,0 +1,46 @@
+import { supabase } from '../../lib/supabase';
+
+export async function listProducts({ includeArchived = false } = {}) {
+  let query = supabase.from('products').select('*').order('name');
+  if (!includeArchived) query = query.eq('archived', false);
+  const { data, error } = await query;
+  if (error) throw error;
+  return data || [];
+}
+
+export async function getProduct(id) {
+  const { data, error } = await supabase.from('products').select('*').eq('id', id).single();
+  if (error) throw error;
+  return data;
+}
+
+export async function searchProducts(query = '') {
+  const products = await listProducts();
+  const q = query.trim().toLowerCase();
+  if (!q) return products;
+  return products.filter((p) =>
+    [p.name, p.sku, p.barcode, p.category].some((value) => value?.toLowerCase().includes(q))
+  );
+}
+
+export async function createProduct(product) {
+  const { data, error } = await supabase.from('products').insert(product).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateProduct(id, changes) {
+  const { quantity: _quantity, ...safeChanges } = changes;
+  const { data, error } = await supabase.from('products').update(safeChanges).eq('id', id).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function archiveProduct(id) {
+  return updateProduct(id, { archived: true });
+}
+
+export async function getLowStockProducts() {
+  const products = await listProducts();
+  return products.filter((p) => p.quantity <= (p.reorder_level ?? 10));
+}
