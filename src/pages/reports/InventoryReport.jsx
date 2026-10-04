@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getInventorySummary } from '../../services/indexeddb/inventoryStore';
+import { getInventorySummary } from '../../services/online/inventoryService';
 import InventoryTable from '../../components/tables/InventoryTable';
 import { useBusinessSettings } from '../../hooks/useBusinessSettings';
 import ReportHeader from '../../components/analytics/ReportHeader';
