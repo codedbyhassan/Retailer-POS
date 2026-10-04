@@ -106,7 +106,7 @@ export async function pullCloudChanges() {
       localStorage.setItem(CURSOR_KEY, String(cursor));
     }
 
-    if (blocked || !body.hasMore || appliedThrough === cursor && changes.length > 0) break;
+    if (blocked || !body.hasMore) break;
   }
 
   return { pulled, blocked: false, cursor };
