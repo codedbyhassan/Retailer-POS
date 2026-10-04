@@ -2,6 +2,7 @@ import {
   getPendingSyncItems,
   markSyncItemComplete,
   markSyncItemFailed,
+  markSyncItemConflict,
 } from './syncQueue';
 import { pullCloudChanges } from './syncPull';
 
@@ -49,7 +50,13 @@ export async function runSync() {
 
         if (!res.ok) {
           const body = await res.json().catch(() => null);
-          throw new Error(body?.message || `Sync failed: ${res.status}`);
+          const message = body?.message || `Sync failed: ${res.status}`;
+          if (res.status === 409) {
+            await markSyncItemConflict(item.id, message, { status: res.status, serverMessage: message });
+            failed++;
+            break;
+          }
+          throw new Error(message);
         }
 
         await markSyncItemComplete(item.id);
