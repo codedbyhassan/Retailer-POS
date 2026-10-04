@@ -78,6 +78,11 @@ export async function handleSync(req, res) {
 
     return res.json({ success: true, id: item.id, result });
   } catch (err) {
-    return res.status(500).json({ message: err.message });
+    const message = err?.message || 'Sync failed';
+    const lower = message.toLowerCase();
+    const status = lower.includes('insufficient stock') || lower.includes('cannot become negative') || lower.includes('unavailable') || lower.includes('invalid')
+      ? 409
+      : 500;
+    return res.status(status).json({ message });
   }
 }
