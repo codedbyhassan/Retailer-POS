@@ -3,6 +3,7 @@ import {
   markSyncItemComplete,
   markSyncItemFailed,
 } from './syncQueue';
+import { pullCloudChanges } from './syncPull';
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
 const TOKEN_KEY = 'retailer_token';
@@ -60,14 +61,25 @@ export async function runSync() {
       }
     }
 
-    if (synced > 0) {
+    const remaining = await getPendingSyncItems();
+    let pulled = 0;
+    let blocked = false;
+    if (remaining.length === 0 && failed === 0) {
+      const pullResult = await pullCloudChanges();
+      pulled = pullResult.pulled;
+      blocked = pullResult.blocked;
+    }
+
+    if (synced > 0 || pulled > 0) {
       localStorage.setItem('retailer_last_sync', new Date().toISOString());
     }
+
+    return { synced, failed, pulled, blocked };
   } finally {
     isSyncing = false;
   }
 
-  return { synced, failed };
+  return { synced, failed, pulled: 0, blocked: false };
 }
 
 export function startSyncEngine(onSyncComplete) {
