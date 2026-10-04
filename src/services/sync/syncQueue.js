@@ -44,6 +44,68 @@ async function updateSaleSyncStatus(db, item, status) {
   if (sale) await db.put('sales', { ...sale, sync_status: status });
 }
 
+async function reconcileRejectedInventoryAdjustment(db, item, error) {
+  if (item?.action !== 'INVENTORY_ADJUST' || !item.payload?.product_id) return false;
+  const log = item.payload;
+  const product = await db.get('products', log.product_id);
+  if (!product) return false;
+
+  const delta = Number(log.quantity);
+  if (!Number.isInteger(delta) || delta === 0) return false;
+
+  const tx = db.transaction(['products', 'inventory_logs', 'audit_logs'], 'readwrite');
+  const products = tx.objectStore('products');
+  const inventory = tx.objectStore('inventory_logs');
+  const audit = tx.objectStore('audit_logs');
+  const current = await products.get(log.product_id);
+
+  if (!current) {
+    await tx.done;
+    return false;
+  }
+
+  const restoredQuantity = Number(current.quantity || 0) - delta;
+  if (restoredQuantity < 0) {
+    await tx.done;
+    return false;
+  }
+
+  const now = new Date().toISOString();
+  await products.put({
+    ...current,
+    quantity: restoredQuantity,
+    updated_at: now,
+  });
+
+  await inventory.add({
+    id: generateId('inv'),
+    product_id: log.product_id,
+    type: 'ADJUSTMENT_REVERSAL',
+    quantity: -delta,
+    note: 'Reversed rejected cloud inventory adjustment',
+    reference_id: log.id,
+    reference_type: 'inventory_conflict',
+    created_at: now,
+  });
+
+  await audit.add({
+    id: generateId('audit'),
+    action: 'REVERSE_CONFLICTED_INVENTORY_ADJUST',
+    entity_type: 'product',
+    entity_id: log.product_id,
+    metadata: {
+      adjustment_id: log.id,
+      original_delta: delta,
+      restored_quantity: restoredQuantity,
+      reason: error instanceof Error ? error.message : String(error),
+    },
+    created_at: now,
+  });
+
+  await tx.done;
+  return true;
+}
+
 async function reconcileRejectedSale(db, item, error) {
   if (item?.action !== 'CREATE_SALE' || !item.payload?.sale?.id) return false;
   const { sale, items = [] } = item.payload;
@@ -156,7 +218,7 @@ export async function markSyncItemConflict(id, error, details = {}) {
   const item = await db.get('sync_queue', id);
   if (!item) return;
 
-  const reconciled = await reconcileRejectedSale(db, item, error);
+  const reconciled = item.action === 'CREATE_SALE'\n    ? await reconcileRejectedSale(db, item, error)\n    : await reconcileRejectedInventoryAdjustment(db, item, error);
 
   await db.put('sync_queue', {
     ...item,
