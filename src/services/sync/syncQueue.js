@@ -64,7 +64,9 @@ async function reconcileRejectedInventoryAdjustment(db, item, error) {
     return false;
   }
 
-  const restoredQuantity = Number(current.quantity || 0) - delta;
+  const restoredQuantity = Number.isInteger(log.before_quantity)
+    ? log.before_quantity
+    : Number(current.quantity || 0) - delta;
   if (restoredQuantity < 0) {
     await tx.done;
     return false;
@@ -218,7 +220,12 @@ export async function markSyncItemConflict(id, error, details = {}) {
   const item = await db.get('sync_queue', id);
   if (!item) return;
 
-  const reconciled = item.action === 'CREATE_SALE'\n    ? await reconcileRejectedSale(db, item, error)\n    : await reconcileRejectedInventoryAdjustment(db, item, error);
+  let reconciled = false;
+  if (item.action === 'CREATE_SALE') {
+    reconciled = await reconcileRejectedSale(db, item, error);
+  } else if (item.action === 'INVENTORY_ADJUST') {
+    reconciled = await reconcileRejectedInventoryAdjustment(db, item, error);
+  }
 
   await db.put('sync_queue', {
     ...item,
