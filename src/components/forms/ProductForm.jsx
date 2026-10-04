@@ -72,7 +72,7 @@ export default function ProductForm({ initial, onSubmit, onCancel, loading }) {
               <Button type="button" variant="ghost" size="sm" onClick={removeImage}>Remove image</Button>
             )}
             {imageError && <p className="text-xs text-red-500">{imageError}</p>}
-            <p className="text-xs text-gray-400">Stored locally in IndexedDB. JPG/PNG, auto-compressed.</p>
+            <p className="text-xs text-gray-400">Product images are temporarily disabled in the online-only version.</p>
           </div>
         </div>
 
