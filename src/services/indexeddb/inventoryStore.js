@@ -14,14 +14,17 @@ export async function getInventoryLogsByProduct(productId) {
 
 export async function addInventoryLog({ product_id, type, quantity, note = '' }) {
   const db = await getDB();
-  const delta = Number(quantity);
+  const normalizedType = String(type || 'ADJUSTMENT').toLowerCase();
+  const amount = Number(quantity);
   if (!product_id) throw new Error('Product is required');
-  if (!Number.isInteger(delta) || delta === 0) throw new Error('Inventory adjustment must be a non-zero integer');
+  if (!Number.isInteger(amount) || amount <= 0) throw new Error('Inventory adjustment quantity must be a positive integer');
+  if (!['add', 'remove'].includes(normalizedType)) throw new Error('Inventory adjustment type must be add or remove');
 
+  const delta = normalizedType === 'remove' ? -amount : amount;
   const log = {
     id: generateId('inv'),
     product_id,
-    type: type || 'ADJUSTMENT',
+    type: normalizedType,
     quantity: delta,
     note,
     created_at: new Date().toISOString(),
