@@ -3,7 +3,7 @@ import { useSyncStatus } from '../../hooks/useSyncStatus';
 
 export default function StatusPills({ compact = false }) {
   const { isOnline } = useOfflineStatus();
-  const { pendingCount, lastSync } = useSyncStatus();
+  const { pendingCount, conflictCount, lastSync } = useSyncStatus();
 
   return (
     <div className="hidden items-center gap-2 sm:flex">
@@ -21,6 +21,12 @@ export default function StatusPills({ compact = false }) {
         />
         {isOnline ? 'Online' : 'Offline'}
       </span>
+
+      {conflictCount > 0 && (
+        <span className="ios-pill bg-red-500/10 text-red-700 dark:bg-red-500/15 dark:text-red-400">
+          {conflictCount} conflict{conflictCount === 1 ? '' : 's'}
+        </span>
+      )}
 
       {pendingCount > 0 && (
         <span className="ios-pill bg-amber-500/10 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400">
