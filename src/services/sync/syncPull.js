@@ -1,4 +1,5 @@
 import { getDB } from '../indexeddb/db';
+import { getDeviceId } from './deviceIdentity';
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
 const TOKEN_KEY = 'retailer_token';
@@ -78,7 +79,7 @@ export async function pullCloudChanges() {
 
   while (true) {
     const res = await fetch(`${API_BASE}/api/sync/pull?cursor=${encodeURIComponent(cursor)}&limit=500`, {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: { Authorization: `Bearer ${token}`, 'X-Device-ID': getDeviceId() },
     });
     if (!res.ok) throw new Error((await res.json().catch(() => null))?.message || `Sync pull failed: ${res.status}`);
     const body = await res.json();
