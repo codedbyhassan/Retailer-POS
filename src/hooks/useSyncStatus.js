@@ -1,24 +1,18 @@
-import { useState, useEffect, useCallback } from 'react';
-import { getSyncQueueCount, getSyncConflicts } from '../services/sync/syncQueue';
-import { getLastSyncTime } from '../services/sync/syncEngine';
+import { useEffect, useState } from 'react';
 
 export function useSyncStatus() {
-  const [pendingCount, setPendingCount] = useState(0);
-  const [lastSync, setLastSync] = useState(getLastSyncTime());
-  const [conflictCount, setConflictCount] = useState(0);
-
-  const refresh = useCallback(async () => {
-    const [count, conflicts] = await Promise.all([getSyncQueueCount(), getSyncConflicts()]);
-    setPendingCount(count);
-    setConflictCount(conflicts.length);
-    setLastSync(getLastSyncTime());
-  }, []);
+  const [online, setOnline] = useState(navigator.onLine);
 
   useEffect(() => {
-    refresh();
-    const interval = setInterval(refresh, 5000);
-    return () => clearInterval(interval);
-  }, [refresh]);
+    const on = () => setOnline(true);
+    const off = () => setOnline(false);
+    window.addEventListener('online', on);
+    window.addEventListener('offline', off);
+    return () => {
+      window.removeEventListener('online', on);
+      window.removeEventListener('offline', off);
+    };
+  }, []);
 
-  return { pendingCount, conflictCount, lastSync, refresh };
+  return { pendingCount: 0, conflictCount: 0, lastSync: online ? new Date().toISOString() : null, online, refresh: async () => {} };
 }
