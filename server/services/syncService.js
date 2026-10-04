@@ -68,9 +68,15 @@ export async function applySyncAction(item) {
       break;
 
     case 'CREATE_PRODUCT':
-    case 'UPDATE_PRODUCT':
       result = await supabase.from('products').upsert(mapProduct(payload));
       break;
+
+    case 'UPDATE_PRODUCT': {
+      const product = mapProduct(payload);
+      delete product.quantity;
+      result = await supabase.from('products').update(product).eq('id', payload.id);
+      break;
+    }
 
     case 'ARCHIVE_PRODUCT':
       result = await supabase
