@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
-import { getAllProducts } from '../../services/indexeddb/productsStore';
-import { getAllInventoryLogs, addInventoryLog, getInventorySummary } from '../../services/indexeddb/inventoryStore';
-import { addToSyncQueue } from '../../services/sync/syncQueue';
+import { listProducts } from '../../services/online/productService';
+import { listInventoryLogs, adjustInventory, getInventorySummary } from '../../services/online/inventoryService';
 import { useBusinessSettings } from '../../hooks/useBusinessSettings';
 import InventoryTable from '../../components/tables/InventoryTable';
 import StockAdjustForm from '../../components/forms/StockAdjustForm';
@@ -21,8 +20,8 @@ export default function InventoryPage() {
 
   const load = async () => {
     const [prods, invLogs, invSummary] = await Promise.all([
-      getAllProducts(),
-      getAllInventoryLogs(),
+      listProducts(),
+      listInventoryLogs(),
       getInventorySummary(),
     ]);
     setProducts(prods);
@@ -35,8 +34,9 @@ export default function InventoryPage() {
   const handleAdjust = async (data) => {
     setLoading(true);
     try {
-      const log = await addInventoryLog(data);
-      await addToSyncQueue('INVENTORY_ADJUST', log);
+      const amount = Number(data.quantity);
+      const delta = String(data.type).toLowerCase() === 'remove' ? -amount : amount;
+      await adjustInventory({ ...data, delta });
       toast.success('Stock updated');
       setShowAdjust(false);
       load();
