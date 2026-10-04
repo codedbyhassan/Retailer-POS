@@ -19,13 +19,26 @@ function getStoredSession() {
 async function tryServerLogin(email, password) {
   if (!navigator.onLine) return null;
 
-  const response = await fetch(`${API_BASE}/api/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
-  });
+  let response;
+  try {
+    response = await fetch(`${API_BASE}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+  } catch (error) {
+    error.code = 'NETWORK_ERROR';
+    throw error;
+  }
 
-  if (!response.ok) return null;
+  if (!response.ok) {
+    const error = new Error(
+      response.status === 401 || response.status === 403 ? 'Invalid email or password' : 'Unable to sign in'
+    );
+    error.code = response.status === 401 || response.status === 403 ? 'AUTH_REJECTED' : 'SERVER_ERROR';
+    throw error;
+  }
+
   return response.json();
 }
 
@@ -48,8 +61,10 @@ export function useAuth() {
         setUser(serverSession.user);
         return serverSession.user;
       }
-    } catch {
-      // Fall back to the local credential store so the POS remains usable offline.
+      if (navigator.onLine) throw new Error('Unable to sign in');
+    } catch (error) {
+      if (error.code !== 'NETWORK_ERROR') throw error;
+      // Only network failures may fall back to the local credential store.
     }
 
     const db = await getDB();
