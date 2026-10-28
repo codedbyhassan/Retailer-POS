@@ -21,6 +21,10 @@ export default function SaleDetailPage() {
       setSale(null);
       try {
         const result = await getSale(id);
+        if (!result) {
+          if (active) setError('This transaction could not be found or is no longer available.');
+          return;
+        }
         if (active) setSale(result);
       } catch (loadError) {
         if (active) setError(loadError?.message || 'Unable to load this transaction right now.');
@@ -66,7 +70,11 @@ export default function SaleDetailPage() {
     );
   }
 
-  const items = Array.isArray(sale.items) ? sale.items : [];
+  const items = Array.isArray(sale.sale_items)
+    ? sale.sale_items
+    : Array.isArray(sale.items)
+      ? sale.items
+      : [];
 
   return (
     <div className="min-w-0">
@@ -99,14 +107,17 @@ export default function SaleDetailPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-black/[0.04] dark:divide-white/[0.06]">
-                {items.map((item) => (
-                  <tr key={item.id}>
-                    <td className="max-w-[18rem] break-words px-4 py-3">{item.product_name || 'Unknown product'}</td>
-                    <td className="whitespace-nowrap px-4 py-3 text-right tabular-nums">{item.quantity}</td>
-                    <td className="whitespace-nowrap px-4 py-3 text-right tabular-nums">{formatCurrency(item.price, currency)}</td>
-                    <td className="whitespace-nowrap px-4 py-3 text-right font-medium tabular-nums">{formatCurrency(item.subtotal, currency)}</td>
-                  </tr>
-                ))}
+                {items.map((item) => {
+                  const productLabel = item.product_name || item.name || (item.product_id ? 'Product ' + String(item.product_id).slice(0, 8) : 'Unknown product');
+                  return (
+                    <tr key={item.id}>
+                      <td className="max-w-[18rem] break-words px-4 py-3">{productLabel}</td>
+                      <td className="whitespace-nowrap px-4 py-3 text-right tabular-nums">{item.quantity}</td>
+                      <td className="whitespace-nowrap px-4 py-3 text-right tabular-nums">{formatCurrency(item.price, currency)}</td>
+                      <td className="whitespace-nowrap px-4 py-3 text-right font-medium tabular-nums">{formatCurrency(item.subtotal, currency)}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
