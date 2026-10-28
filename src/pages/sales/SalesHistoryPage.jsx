@@ -12,6 +12,7 @@ export default function SalesHistoryPage() {
   const [dateTo, setDateTo] = useState('');
   const [pageLoading, setPageLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
+  const [retryKey, setRetryKey] = useState(0);
   const { currency } = useBusinessSettings();
   const navigate = useNavigate();
 
@@ -35,7 +36,7 @@ export default function SalesHistoryPage() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [retryKey]);
 
   const filtered = sales.filter((sale) => {
     if (dateFrom && new Date(sale.created_at) < new Date(dateFrom)) return false;
@@ -90,10 +91,10 @@ export default function SalesHistoryPage() {
           <p className="mt-1 break-words text-sm text-red-700 dark:text-red-400">{loadError}</p>
           <button
             type="button"
-            onClick={() => window.location.reload()}
+            onClick={() => setRetryKey((current) => current + 1)}
             className="mt-4 min-h-10 rounded-xl px-3 text-sm font-semibold text-red-800 hover:bg-red-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 dark:text-red-300 dark:hover:bg-red-950/50"
           >
-            Reload page
+            Try again
           </button>
         </div>
       ) : pageLoading ? (
