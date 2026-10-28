@@ -97,7 +97,7 @@ export default function AdminLayout() {
       <MobileAdminNav />
 
       <div className="flex flex-1">
-        <aside className="sticky top-[3.75rem] hidden h-[calc(100vh-3.75rem)] w-[15.5rem] shrink-0 flex-col self-start border-r border-black/[0.04] bg-white/60 backdrop-blur-ios dark:border-white/[0.06] dark:bg-surface-dark/60 md:flex">
+        <aside className="sticky top-[3.75rem] hidden h-[calc(100vh-3.75rem)] w-[15.5rem] shrink-0 flex-col self-start border-r border-black/[0.04] bg-white/60 backdrop-blur-ios dark:border-white/[0.06] dark:bg-surface-dark/60 lg:flex">
           <nav className="flex-1 space-y-1 p-3 pt-5">
             {navItems.map((item) => (
               <NavLink
@@ -137,7 +137,7 @@ export default function AdminLayout() {
           </nav>
         </aside>
 
-        <main className="flex-1 overflow-auto p-5 sm:p-6 lg:p-8">
+        <main className="min-w-0 flex-1 p-3 sm:p-4 lg:p-6 xl:p-8">
           <Outlet />
         </main>
       </div>

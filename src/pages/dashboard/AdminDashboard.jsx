@@ -8,7 +8,7 @@ import { LowStockAlert, HourlySalesSparkline, SkeletonLoader } from '../../compo
 
 function StatCard({ label, value, sub, alert }) {
   return (
-    <div className={`rounded-3xl border p-5 transition-all duration-200 ease-ios hover:shadow-ios-md ${alert ? 'border-amber-300/60 bg-amber-50/80 dark:border-amber-800/40 dark:bg-amber-900/20' : 'ios-card border-black/[0.04] dark:border-white/[0.06]'}`}>
+    <div className={`rounded-2xl border p-4 transition-all duration-200 ease-ios hover:shadow-ios-md ${alert ? 'border-amber-300/60 bg-amber-50/80 dark:border-amber-800/40 dark:bg-amber-900/20' : 'ios-card border-black/[0.04] dark:border-white/[0.06]'}`}>
       <p className="text-sm text-gray-500">{label}</p>
       <p className="mt-1 text-2xl font-bold">{value}</p>
       {sub && <p className="mt-1 text-xs text-gray-400">{sub}</p>}
@@ -51,12 +51,12 @@ export default function AdminDashboard() {
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between">
-        <h2>Dashboard</h2>
-
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+        <div><p className="mb-1 text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">Store overview</p><h2>Dashboard</h2></div>
+        <p className="text-sm text-gray-500 dark:text-gray-400">Sales and stock at a glance</p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         <StatCard label="Today's Sales" value={stats ? formatMoney(stats.todayTotal) : '-'} sub={stats ? `${stats.todayCount} transactions` : ''} />
         <StatCard label="This Week" value={stats ? formatMoney(stats.weekTotal) : '-'} />
         <StatCard label="This Month" value={stats ? formatMoney(stats.monthTotal) : '-'} />
