@@ -29,9 +29,9 @@ export default function ProductCard({
       type="button"
       onClick={onClick}
       disabled={disabled || outOfStock}
-      className={`group relative flex min-h-[15rem] flex-col overflow-hidden rounded-[1.15rem] border border-black/[0.06] bg-white text-left shadow-[0_10px_28px_rgba(15,23,42,0.07)] transition-all duration-300 ease-ios hover:-translate-y-0.5 hover:border-brand-400/35 hover:shadow-[0_18px_42px_rgba(15,23,42,0.13)] active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-55 disabled:hover:translate-y-0 dark:border-white/[0.08] dark:bg-surface-dark dark:shadow-none dark:hover:border-brand-300/30 dark:hover:shadow-ios ${className}`}
+      className={`group relative flex min-h-[12.5rem] sm:min-h-[13rem] flex-col overflow-hidden rounded-[1.15rem] border border-black/[0.06] bg-white text-left shadow-[0_10px_28px_rgba(15,23,42,0.07)] transition-all duration-300 ease-ios hover:-translate-y-0.5 hover:border-brand-400/35 hover:shadow-[0_18px_42px_rgba(15,23,42,0.13)] active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-55 disabled:hover:translate-y-0 dark:border-white/[0.08] dark:bg-surface-dark dark:shadow-none dark:hover:border-brand-300/30 dark:hover:shadow-ios ${className}`}
     >
-      <div className="relative aspect-[1.18] w-full overflow-hidden bg-[linear-gradient(135deg,#f8fafc,#eef2f7)] dark:bg-[linear-gradient(135deg,rgba(255,255,255,0.08),rgba(255,255,255,0.02))]">
+      <div className="relative aspect-[1.5] sm:aspect-[1.35] w-full overflow-hidden bg-[linear-gradient(135deg,#f8fafc,#eef2f7)] dark:bg-[linear-gradient(135deg,rgba(255,255,255,0.08),rgba(255,255,255,0.02))]">
         {imageSrc ? (
           <img
             src={imageSrc}
@@ -63,15 +63,15 @@ export default function ProductCard({
         )}
       </div>
 
-      <div className={`flex flex-1 flex-col ${variant === 'compact' ? 'p-3' : 'p-4'}`}>
-        <h3 className="line-clamp-2 !text-[0.95rem] !font-semibold leading-snug text-gray-950 dark:text-white">
+      <div className={`flex flex-1 flex-col ${variant === 'compact' ? 'p-3' : variant === 'pos' ? 'p-3 sm:p-3.5' : 'p-4'}`}>
+        <h3 className="line-clamp-2 !text-[0.9rem] sm:!text-[0.95rem] !font-semibold leading-snug text-gray-950 dark:text-white">
           {product.name}
         </h3>
         {product.sku && variant !== 'pos' && (
           <p className="mt-1 text-[0.6875rem] font-medium text-gray-400">{product.sku}</p>
         )}
         <div className="mt-auto flex items-end justify-between gap-3 pt-4">
-          <span className="min-w-0 text-lg font-bold tracking-tight text-gray-950 dark:text-white">{price}</span>
+          <span className="min-w-0 text-base font-bold tracking-tight text-gray-950 sm:text-lg dark:text-white">{price}</span>
           {showStock && (
             <span className="shrink-0 rounded-full bg-black/[0.04] px-2.5 py-1 text-[0.6875rem] font-semibold text-gray-500 dark:bg-white/[0.06] dark:text-gray-400">{product.quantity} left</span>
           )}
@@ -83,7 +83,7 @@ export default function ProductCard({
 
 export function ProductCardGrid({ children, className = '' }) {
   return (
-    <div className={`grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 ${className}`}>
+    <div className={`grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 ${className}`}>
       {children}
     </div>
   );
