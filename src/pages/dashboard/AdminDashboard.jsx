@@ -56,7 +56,7 @@ export default function AdminDashboard() {
         <p className="text-sm text-gray-500 dark:text-gray-400">Sales and stock at a glance</p>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         <StatCard label="Today's Sales" value={stats ? formatMoney(stats.todayTotal) : '-'} sub={stats ? `${stats.todayCount} transactions` : ''} />
         <StatCard label="This Week" value={stats ? formatMoney(stats.weekTotal) : '-'} />
         <StatCard label="This Month" value={stats ? formatMoney(stats.monthTotal) : '-'} />
